@@ -1,0 +1,7 @@
+[build]
+  command = "git lfs pull && npm install && npm run build"
+  publish = "dist"
+
+[build.environment]
+  GIT_LFS_ENABLED = "true"
+  NODE_VERSION = "18"
