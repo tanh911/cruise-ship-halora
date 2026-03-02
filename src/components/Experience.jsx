@@ -12,8 +12,7 @@ import ZoomControls from './UI/ZoomControls';
 import TestRoom from './Scenes/TestRoom';
 import PremiumTripleRoom from './Scenes/PremiumTripleRoom';
 
-// Preload room models for faster transition
-useGLTF.preload('/models/premiumTripleRoom.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+// Room model is loaded lazily when user enters the room
 
 // Separate component for the ocean scene to isolate hooks
 const BaseScene = ({ targetView }) => {
