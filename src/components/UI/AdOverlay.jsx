@@ -60,11 +60,11 @@ const AdOverlay = ({ onExplore, visible = true }) => {
             <div className="ad-sidebar">
                 {/* Explore Buttons */}
                 <div className="explore-buttons">
-                    <button onClick={() => onExplore('suite')} style={exploreBtnStyle}>
-                        ROYAL SUITE
+                    <button onClick={() => onExplore('suite')} style={{ ...exploreBtnStyle, opacity: 0.4, cursor: 'not-allowed' }} disabled>
+                        ROYAL SUITE <span style={{ fontSize: '8px', display: 'block', color: '#999' }}>Đang triển khai</span>
                     </button>
-                    <button onClick={() => onExplore('sundeck')} style={exploreBtnStyle}>
-                        SUN DECK
+                    <button onClick={() => onExplore('sundeck')} style={{ ...exploreBtnStyle, opacity: 0.4, cursor: 'not-allowed' }} disabled>
+                        SUN DECK <span style={{ fontSize: '8px', display: 'block', color: '#999' }}>Đang triển khai</span>
                     </button>
                     <button onClick={() => onExplore('premiumtripleroom')} style={exploreBtnStyle}>
                         PREMIUM TRIPLE
@@ -72,8 +72,8 @@ const AdOverlay = ({ onExplore, visible = true }) => {
                     <button onClick={() => onExplore('default')} style={exploreBtnStyle}>
                         TOÀN CẢNH
                     </button>
-                    <button onClick={() => onExplore('testroom')} style={exploreBtnStyle}>
-                        TEST ROOM
+                    <button style={{ ...exploreBtnStyle, opacity: 0.4, cursor: 'not-allowed' }} disabled>
+                        TEST ROOM <span style={{ fontSize: '8px', display: 'block', color: '#999' }}>Đang triển khai</span>
                     </button>
                 </div>
 
