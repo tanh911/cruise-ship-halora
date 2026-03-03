@@ -36,29 +36,41 @@ const RoomScene = ({ onExit }) => {
     const { camera } = useThree();
 
     useEffect(() => {
-        camera.position.set(2, 1.5, 6);
-        camera.lookAt(-13, 5, 0);
-        camera.fov = 120;
+        camera.position.set(3, 2, 8);
+        camera.lookAt(0, 2, 0);
+        camera.fov = 100;
         camera.updateProjectionMatrix();
     }, [camera]);
 
     return (
         <>
-            <ambientLight intensity={0.1} color="#ffffff" />
-            <directionalLight position={[10, 15, 10]} intensity={0.3} />
-            <Environment preset="apartment" background blur={0.8} backgroundIntensity={0.3} environmentIntensity={0.4} />
-            <Center>
+            {/* Interior lighting - Boosted for warmth and clarity */}
+            <ambientLight intensity={0.5} color="#fffcf0" />
+            <directionalLight position={[10, 20, 10]} intensity={1.5} color="#fff" castShadow />
+            <pointLight position={[0, 5, 0]} intensity={2} color="#ffaa00" distance={10} />
+
+            {/* Environment for reflections only (NO background prop) */}
+            <Environment
+                preset="apartment"
+                background={false}
+                blur={0.8}
+                backgroundIntensity={0.5}
+                environmentIntensity={0.8}
+            />
+
+            <Center top>
                 <Model />
             </Center>
+
             <OrbitControls
                 makeDefault
-                target={[0, 2, 0]}
-                enableZoom={false}
+                target={[0, 1.5, 0]}
+                enableZoom={true}
+                minDistance={2}
+                maxDistance={12}
                 enablePan={false}
-                minPolarAngle={Math.PI / 2}
-                maxPolarAngle={Math.PI / 2}
-                minAzimuthAngle={-Math.PI / 180}
-                maxAzimuthAngle={Math.PI / 4}
+                minPolarAngle={Math.PI / 6}
+                maxPolarAngle={Math.PI / 2.1}
             />
         </>
     );
