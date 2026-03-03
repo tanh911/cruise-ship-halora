@@ -15,7 +15,7 @@ const PremiumTripleRoom = React.lazy(() => import('./Scenes/PremiumTripleRoom'))
 // Room model is loaded lazily when user enters the room
 
 // Separate component for the ocean scene to isolate hooks
-const BaseScene = ({ targetView }) => {
+const BaseScene = ({ targetView, hideShip }) => {
     const controlsRef = useRef();
     const [targetPos, setTargetPos] = useState(new THREE.Vector3(67.5, 30, 25.5));
     const [targetLookAt, setTargetLookAt] = useState(new THREE.Vector3(0, 0, 0));
@@ -103,9 +103,13 @@ const BaseScene = ({ targetView }) => {
                 intensity={0.3}
             />
 
-            <group position={[0, 1, 5]}>
-                <Ship />
-            </group>
+            {!hideShip && (
+                <group position={[0, 1, 5]}>
+                    <Suspense fallback={null}>
+                        <Ship />
+                    </Suspense>
+                </group>
+            )}
 
             <Water />
 
@@ -124,19 +128,17 @@ const BaseScene = ({ targetView }) => {
 
 // Experience is now a simple router - no hooks, no conflicts
 const Experience = ({ targetView, setTargetView }) => {
-    // Cờ kiểm tra xem đang ở trong phòng hay không
+    // Luôn giữ BaseScene mounted để tránh chớp giật khi khởi tạo lại Ship/Water
+    // Chúng ta chỉ thay đổi góc máy hoặc ẩn model Ship khi cần thiết
     const isInsideRoom = targetView === 'testroom' || targetView === 'premiumtripleroom';
 
     return (
         <Suspense fallback={null}>
-            {/* 1. Cảnh ngoài trời (Ship, Ocean, Sky) 
-               Chúng ta giữ nó mounted kể cả khi vào phòng (nhưng có thể ẩn nếu cần)
-               để khi quay lại không bị chớp load lại Ship. */}
-            <group visible={!isInsideRoom}>
-                <BaseScene targetView={isInsideRoom ? 'default' : targetView} />
-            </group>
+            {/* Cảnh nền (Sea, Sky, Environment) luôn hiện diện */}
+            {/* Ship chỉ ẩn đi khi thực sự đã ở trong phòng để tiết kiệm tài nguyên và tránh che mắt */}
+            <BaseScene targetView={isInsideRoom ? 'default' : targetView} hideShip={isInsideRoom} />
 
-            {/* 2. Các scene phòng đặc tả (Lazy loaded) */}
+            {/* Các phòng load theo yêu cầu */}
             {targetView === 'testroom' && (
                 <TestRoom />
             )}

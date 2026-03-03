@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -30,7 +30,7 @@ const Ship = () => {
     const targetPos = useMemo(() => new THREE.Vector3(), []);
     const targetQuat = useMemo(() => new THREE.Quaternion(), []);
 
-    React.useLayoutEffect(() => {
+    useLayoutEffect(() => {
         if (scene) {
             const box = new THREE.Box3().setFromObject(scene);
             const center = box.getCenter(new THREE.Vector3());
