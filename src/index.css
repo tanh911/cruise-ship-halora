@@ -226,7 +226,7 @@ canvas {
 }
 
 /* ==================== AdOverlay Base ==================== */
-.ad-overlay {
+.cruise-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -241,7 +241,7 @@ canvas {
   color: white;
 }
 
-.ad-header {
+.cruise-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -250,14 +250,14 @@ canvas {
   pointer-events: auto;
 }
 
-.ad-logo {
+.cruise-logo {
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
 }
 
-.ad-nav ul {
+.cruise-nav ul {
   display: flex;
   gap: 30px;
   list-style: none;
@@ -296,7 +296,7 @@ canvas {
   transition: all 0.3s;
 }
 
-.ad-title {
+.cruise-title {
   position: absolute;
   top: 20%;
   left: 3%;
@@ -304,7 +304,7 @@ canvas {
   pointer-events: none;
 }
 
-.ad-title h1 {
+.cruise-title h1 {
   font-size: 4rem;
   margin: 0;
   font-weight: 400;
@@ -312,7 +312,7 @@ canvas {
   letter-spacing: 5px;
 }
 
-.ad-sidebar {
+.cruise-sidebar {
   position: absolute;
   right: 30px;
   top: 50%;
@@ -358,21 +358,21 @@ canvas {
 
 /* ==================== iPad (768-1024px) ==================== */
 @media (max-width: 1024px) {
-  .ad-header {
+  .cruise-header {
     padding: 15px 25px;
   }
 
-  .ad-nav ul {
+  .cruise-nav ul {
     gap: 15px;
     font-size: 9px;
   }
 
-  .ad-title h1 {
+  .cruise-title h1 {
     font-size: 2.5rem;
     letter-spacing: 3px;
   }
 
-  .ad-sidebar {
+  .cruise-sidebar {
     right: 15px;
   }
 
@@ -389,11 +389,11 @@ canvas {
     display: flex;
   }
 
-  .ad-header {
+  .cruise-header {
     padding: 15px 20px;
   }
 
-  .ad-nav {
+  .cruise-nav {
     position: fixed;
     top: 0;
     right: -100%;
@@ -408,30 +408,30 @@ canvas {
     z-index: 2500;
   }
 
-  .ad-nav.open {
+  .cruise-nav.open {
     right: 0;
   }
 
-  .ad-nav ul {
+  .cruise-nav ul {
     flex-direction: column;
     gap: 25px;
     text-align: center;
     font-size: 14px;
   }
 
-  .ad-title {
+  .cruise-title {
     top: 30%;
     left: 5%;
     right: 5%;
     text-align: center;
   }
 
-  .ad-title h1 {
+  .cruise-title h1 {
     font-size: 1.8rem;
     letter-spacing: 2px;
   }
 
-  .ad-sidebar {
+  .cruise-sidebar {
     right: auto;
     left: 50%;
     top: auto;
@@ -472,7 +472,7 @@ canvas {
 
 /* ==================== Small Mobile (<480px) ==================== */
 @media (max-width: 480px) {
-  .ad-title h1 {
+  .cruise-title h1 {
     font-size: 1.3rem;
     letter-spacing: 1px;
   }
@@ -483,7 +483,7 @@ canvas {
     letter-spacing: 0px !important;
   }
 
-  .ad-sidebar {
+  .cruise-sidebar {
     bottom: 10px;
   }
 }

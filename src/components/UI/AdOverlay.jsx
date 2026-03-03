@@ -22,11 +22,11 @@ const AdOverlay = ({ onExplore, visible = true }) => {
 
     if (!visible) return null;
     return (
-        <div className="ad-overlay">
+        <div className="cruise-overlay">
             {/* Header / Navbar */}
-            <header className="ad-header">
+            <header className="cruise-header">
                 <div
-                    className="ad-logo"
+                    className="cruise-logo"
                     onClick={() => onExplore('default')}
                 >
                     <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#d4af37', letterSpacing: '2px' }}>HALORA</div>
@@ -40,7 +40,7 @@ const AdOverlay = ({ onExplore, visible = true }) => {
                     <span></span>
                 </div>
 
-                <nav className={`ad-nav ${menuOpen ? 'open' : ''}`}>
+                <nav className={`cruise-nav ${menuOpen ? 'open' : ''}`}>
                     <ul>
                         {['DU THUYỀN HALORA', 'CABIN', 'DỊCH VỤ', 'HÀNH TRÌNH & HOẠT ĐỘNG', 'ƯU ĐÃI', 'KHÁM PHÁ DU LỊCH', 'TIN TỨC'].map((item) => (
                             <li key={item} className="nav-item" onClick={() => setMenuOpen(false)}>
@@ -52,12 +52,12 @@ const AdOverlay = ({ onExplore, visible = true }) => {
             </header>
 
             {/* Main Title Area */}
-            <div className="ad-title">
+            <div className="cruise-title">
                 <h1>HALORA NOVA CRUISE</h1>
             </div>
 
             {/* Floating Action Buttons */}
-            <div className="ad-sidebar">
+            <div className="cruise-sidebar">
                 {/* Explore Buttons */}
                 <div className="explore-buttons">
                     <button onClick={() => onExplore('suite')} style={{ ...exploreBtnStyle, opacity: 0.4, cursor: 'not-allowed' }} disabled>
