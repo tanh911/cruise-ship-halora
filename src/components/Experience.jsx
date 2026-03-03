@@ -124,30 +124,27 @@ const BaseScene = ({ targetView }) => {
 
 // Experience is now a simple router - no hooks, no conflicts
 const Experience = ({ targetView, setTargetView }) => {
+    // Cờ kiểm tra xem đang ở trong phòng hay không
+    const isInsideRoom = targetView === 'testroom' || targetView === 'premiumtripleroom';
+
     return (
-        <>
-            {/* View Phòng Premium */}
-            {targetView === 'premiumtripleroom' && (
-                <Suspense fallback={null}>
-                    <PremiumTripleRoom onExit={() => setTargetView('default')} />
-                </Suspense>
-            )}
+        <Suspense fallback={null}>
+            {/* 1. Cảnh ngoài trời (Ship, Ocean, Sky) 
+               Chúng ta giữ nó mounted kể cả khi vào phòng (nhưng có thể ẩn nếu cần)
+               để khi quay lại không bị chớp load lại Ship. */}
+            <group visible={!isInsideRoom}>
+                <BaseScene targetView={isInsideRoom ? 'default' : targetView} />
+            </group>
 
-            {/* View Phòng Test */}
+            {/* 2. Các scene phòng đặc tả (Lazy loaded) */}
             {targetView === 'testroom' && (
-                <Suspense fallback={null}>
-                    <TestRoom />
-                </Suspense>
+                <TestRoom />
             )}
 
-            {/* Cảnh nền ngoài trời (Ship, Water, Sky) */}
-            {/* Dùng transition-ready check: Chỉ ẩn cảnh nền khi KHÔNG phải là default views */}
-            {(targetView === 'default' || targetView === 'suite' || targetView === 'sundeck') && (
-                <Suspense fallback={null}>
-                    <BaseScene targetView={targetView} />
-                </Suspense>
+            {targetView === 'premiumtripleroom' && (
+                <PremiumTripleRoom onExit={() => setTargetView('default')} />
             )}
-        </>
+        </Suspense>
     );
 };
 

@@ -3,8 +3,8 @@ import { useProgress } from '@react-three/drei';
 
 const LoadingScreen = () => {
     const { active, progress, loaded, total } = useProgress();
-    const [hidden, setHidden] = useState(false);
-    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+    const [isFinished, setIsFinished] = useState(false);
+    const [shouldUnmount, setShouldUnmount] = useState(false);
 
     // Calculate a safe percentage to avoid NaN or Infinity if total is 0
     let safeProgress = 0;
@@ -12,7 +12,7 @@ const LoadingScreen = () => {
         safeProgress = (loaded / total) * 100;
     }
 
-    // Fallback to the provided progress if it's a valid number 
+    // Fallback to the provided progress
     if (Number.isFinite(progress) && progress > safeProgress) {
         safeProgress = progress;
     }
@@ -21,20 +21,19 @@ const LoadingScreen = () => {
     safeProgress = Math.min(Math.max(safeProgress, 0), 100);
 
     useEffect(() => {
-        // Chỉ ẩn đi khi thực sự đã load xong (progress = 100)
-        // và đã có ít nhất 1 cái gì đó được tải (total > 0)
-        // hoặc khi Drei báo active = false nhưng progress đã ở mức cao.
-        if (safeProgress >= 100 || (!active && total > 0)) {
+        // Chỉ kích hoạt trạng thái "Xong" một lần duy nhất.
+        // Khi đã xong (isFinished = true), chúng ta không bao giờ quay lại trạng thái loading nữa,
+        // kể cả khi có tài nguyên chạy ngầm khởi động lại useProgress.
+        if (!isFinished && (safeProgress >= 100 || (!active && total > 0))) {
+            setIsFinished(true);
             const timer = setTimeout(() => {
-                setHidden(true);
-                setHasLoadedOnce(true);
-            }, 800);
+                setShouldUnmount(true);
+            }, 1000); // Đợi 1s (bao gồm 0.8s transition mờ dần) rồi gỡ bỏ hoàn toàn
             return () => clearTimeout(timer);
         }
-    }, [active, safeProgress, total]);
+    }, [safeProgress, active, total, isFinished]);
 
-    // Nếu đã load xong một lần rồi thì biến mất vĩnh viễn
-    if (hasLoadedOnce || hidden) return null;
+    if (shouldUnmount) return null;
 
     return (
         <div style={{
@@ -51,7 +50,7 @@ const LoadingScreen = () => {
             zIndex: 10000,
             transition: 'opacity 0.8s ease-in-out',
             pointerEvents: 'none',
-            opacity: (!active || safeProgress >= 100) ? 0 : 1
+            opacity: isFinished ? 0 : 1
         }}>
             <div style={{
                 width: '300px',
