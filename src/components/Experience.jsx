@@ -124,13 +124,29 @@ const BaseScene = ({ targetView }) => {
 
 // Experience is now a simple router - no hooks, no conflicts
 const Experience = ({ targetView, setTargetView }) => {
-    if (targetView === 'testroom') {
-        return <TestRoom />;
-    }
-    if (targetView === 'premiumtripleroom') {
-        return <PremiumTripleRoom onExit={() => setTargetView('default')} />;
-    }
-    return <BaseScene targetView={targetView} />;
+    return (
+        <>
+            {/* View Phòng Premium */}
+            {targetView === 'premiumtripleroom' && (
+                <Suspense fallback={null}>
+                    <PremiumTripleRoom onExit={() => setTargetView('default')} />
+                </Suspense>
+            )}
+
+            {/* View Phòng Test */}
+            {targetView === 'testroom' && (
+                <Suspense fallback={null}>
+                    <TestRoom />
+                </Suspense>
+            )}
+
+            {/* Cảnh nền ngoài trời (Ship, Water, Sky) */}
+            {/* Dùng transition-ready check: Chỉ ẩn cảnh nền khi KHÔNG phải là default views */}
+            {(targetView === 'default' || targetView === 'suite' || targetView === 'sundeck') && (
+                <BaseScene targetView={targetView} />
+            )}
+        </>
+    );
 };
 
 export default Experience;

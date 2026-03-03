@@ -206,24 +206,7 @@ canvas {
   margin-top: 0.25rem;
 }
 
-/* Transition Overlay */
-.transition-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: #000000;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
 
-.transition-overlay.active {
-  opacity: 1;
-  pointer-events: all;
-}
 
 /* ==================== AdOverlay Base ==================== */
 .cruise-overlay {

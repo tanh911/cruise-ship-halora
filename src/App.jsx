@@ -19,14 +19,13 @@ function App() {
   const handleViewChange = (newView) => {
     if (newView === targetView) return;
 
-    // Sử dụng startTransition để render component 3D mới hoàn toàn ngầm dưới nền.
-    // Cảnh 3D hiện tại sẽ giữ nguyên trên màn hình và không bị giật/đứt gãy
-    // cho đến khi cảnh 3D mới load xong 100%.
+    // Sử dụng startTransition để render component 3D mới ngầm dưới nền.
+    // Kết hợp với việc dời Suspense vào bên trong từng component (Experience.jsx),
+    // giúp loại bỏ hoàn toàn hiện tượng nháy đen khi chuyển cảnh.
     startTransition(() => {
       setTargetView(newView);
     });
   };
-
 
   return (
     <div className="app-container">
@@ -43,9 +42,7 @@ function App() {
         }}
       >
         <SceneErrorBoundary>
-          <Suspense fallback={null}>
-            <Experience targetView={targetView} setTargetView={handleViewChange} />
-          </Suspense>
+          <Experience targetView={targetView} setTargetView={handleViewChange} />
         </SceneErrorBoundary>
       </Canvas>
 
