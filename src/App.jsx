@@ -14,41 +14,22 @@ import './index.css';
 
 function App() {
   const [targetView, setTargetView] = useState('default');
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleViewChange = (newView) => {
     if (newView === targetView) return;
 
-    setIsTransitioning(true); // Fade to black
-
-    // Đợi hiệu ứng fade out hoàn tất (0.3s)
-    setTimeout(() => {
-      // Dùng startTransition để render component mới ngầm dưới nền
-      // Màn hình đen (transition-overlay) sẽ che phủ phần canvas trong lúc load
-      startTransition(() => {
-        setTargetView(newView);
-      });
-    }, 300);
+    // Sử dụng startTransition để render component 3D mới hoàn toàn ngầm dưới nền.
+    // Cảnh 3D hiện tại sẽ giữ nguyên trên màn hình và không bị giật/đứt gãy
+    // cho đến khi cảnh 3D mới load xong 100%.
+    startTransition(() => {
+      setTargetView(newView);
+    });
   };
-
-  // Tự động tắt màn hình đen chuyển cảnh khi component mới đã render xong
-  useEffect(() => {
-    if (!isPending && isTransitioning) {
-      // Đợi thêm một chút để React Three Fiber khởi tạo 3D
-      const timer = setTimeout(() => {
-        setIsTransitioning(false);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [isPending, isTransitioning, targetView]);
 
 
   return (
     <div className="app-container">
-      {/* Lớp phủ chuyển cảnh */}
-      <div className={`transition-overlay ${isTransitioning ? 'active' : ''}`} />
-
       <LoadingScreen />
 
       <Canvas
