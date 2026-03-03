@@ -36,9 +36,9 @@ const RoomScene = ({ onExit }) => {
     const { camera } = useThree();
 
     useEffect(() => {
-        camera.position.set(3, 2, 8);
-        camera.lookAt(0, 2, 0);
-        camera.fov = 100;
+        camera.position.set(2, 1.5, 6);
+        camera.lookAt(-13, 5, 0);
+        camera.fov = 120;
         camera.updateProjectionMatrix();
     }, [camera]);
 
@@ -64,13 +64,13 @@ const RoomScene = ({ onExit }) => {
 
             <OrbitControls
                 makeDefault
-                target={[0, 1.5, 0]}
-                enableZoom={true}
-                minDistance={2}
-                maxDistance={12}
+                target={[0, 2, 0]}
+                enableZoom={false}
                 enablePan={false}
-                minPolarAngle={Math.PI / 6}
-                maxPolarAngle={Math.PI / 2.1}
+                minPolarAngle={Math.PI / 2}
+                maxPolarAngle={Math.PI / 2}
+                minAzimuthAngle={-Math.PI / 180}
+                maxAzimuthAngle={Math.PI / 4}
             />
         </>
     );
