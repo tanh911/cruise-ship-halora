@@ -57,6 +57,7 @@ function App() {
       />
 
       <div style={{ height: '200vh', pointerEvents: 'none' }}></div>
+      {/* <CameraDebugPanel /> */}
     </div>
   );
 }

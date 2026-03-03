@@ -1,6 +1,6 @@
-import React, { Component, useEffect, useState, useCallback } from 'react';
-import { useGLTF, OrbitControls, Environment, Center } from '@react-three/drei';
-import { useThree, useFrame } from '@react-three/fiber';
+import React, { Component, Suspense } from 'react';
+import { useGLTF, OrbitControls, Environment, Stage } from '@react-three/drei';
+import { useThree } from '@react-three/fiber';
 
 class ErrorBoundary extends Component {
     constructor(props) {
@@ -22,8 +22,8 @@ class ErrorBoundary extends Component {
     }
 }
 
-// TẢI TỪ NGUỒN NGOÀI: Tải trực tiếp từ Dropbox (dùng dl.dropboxusercontent.com để tránh lỗi CORS)
-const MODEL_PATH = 'https://dl.dropboxusercontent.com/scl/fi/klx1hqhs5lznm4azlot5i/premiumTripleRoom.glb?rlkey=sfoauoiei8j13qeuju611tv8z&st=hrae7vma';
+// TẢI TỪ NGUỒN NGOÀI: Tải trực tiếp từ Dropbox
+const MODEL_PATH = '/models/premiumTripleRoom-optimized.glb';
 
 const Model = () => {
     const { scene } = useGLTF(MODEL_PATH, 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
@@ -34,47 +34,70 @@ useGLTF.preload(MODEL_PATH, 'https://www.gstatic.com/draco/versioned/decoders/1.
 
 const RoomScene = ({ onExit }) => {
     const { camera } = useThree();
+    const controlsRef = React.useRef();
 
-    useEffect(() => {
-        camera.position.set(2, 1.5, 6);
-        camera.lookAt(-13, 5, 0);
-        camera.fov = 120;
+    React.useLayoutEffect(() => {
+        // Cố định góc nhìn theo yêu cầu của user ngay lập tức
+        camera.position.set(1.5, -0.5, 6);
+        camera.lookAt(2, 2, 3.5);
+        camera.fov = 90;
         camera.updateProjectionMatrix();
+
+        // Đăng ký các hàm global để Debug Panel có thể điều khiển
+        window.__setCameraPos = (x, y, z) => {
+            camera.position.set(x, y, z);
+        };
+        window.__setCameraLookAt = (x, y, z) => {
+            if (controlsRef.current) {
+                controlsRef.current.target.set(x, y, z);
+            }
+        };
+        window.__setCameraFov = (fov) => {
+            camera.fov = fov;
+            camera.updateProjectionMatrix();
+        };
+
+        return () => {
+            delete window.__setCameraPos;
+            delete window.__setCameraLookAt;
+            delete window.__setCameraFov;
+        };
     }, [camera]);
 
     return (
         <>
-            {/* Interior lighting - Boosted significantly to compensate for the removal of the ocean scene lights */}
-            <ambientLight intensity={1.2} color="#fffcf0" />
-            <directionalLight position={[10, 20, 10]} intensity={2.5} color="#fff" castShadow />
-            <directionalLight position={[-10, 15, -10]} intensity={1.0} color="#88aacc" />
-            <pointLight position={[0, 5, 0]} intensity={3} color="#ffaa00" distance={15} />
-
-            {/* Simple colored background to avoid black canvas */}
             <color attach="background" args={['#111']} />
 
-            {/* Environment for reflections and background */}
-            <Environment
-                preset="apartment"
-                background={true}
-                blur={0.5}
-                backgroundIntensity={0.2}
-                environmentIntensity={0.8}
-            />
-
-            <Center top>
-                <Model />
-            </Center>
+            <Suspense fallback={null}>
+                <Stage
+                    environment="apartment"
+                    intensity={0.5}
+                    adjustCamera={false}
+                    center={true}
+                >
+                    <Model />
+                </Stage>
+            </Suspense>
 
             <OrbitControls
+                ref={controlsRef}
                 makeDefault
-                target={[0, 2, 0]}
-                enableZoom={false}
-                enablePan={false}
-                minPolarAngle={Math.PI / 2}
-                maxPolarAngle={Math.PI / 2}
-                minAzimuthAngle={-Math.PI / 180}
-                maxAzimuthAngle={Math.PI / 4}
+                enableZoom={true}
+                minDistance={1}
+                maxDistance={30}
+                enablePan={true}
+                // Smoothing settings
+                enableDamping={true}
+                dampingFactor={0.05}
+                rotateSpeed={0.5}
+                // Target quan trọng để đồng bộ lookAt
+                target={[2, 2, 3.5]}
+                // Khóa xoay dọc tại góc nhìn hiện tại
+                minPolarAngle={Math.PI / 2.5}
+                maxPolarAngle={Math.PI / 2.5}
+                // Giới hạn góc quay ngang trong khoảng 30 độ (±15 độ)
+                minAzimuthAngle={-Math.PI / 12}
+                maxAzimuthAngle={Math.PI / 8}
             />
         </>
     );
