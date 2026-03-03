@@ -22,6 +22,9 @@ class ErrorBoundary extends Component {
     }
 }
 
+// TẢI TỪ NGUỒN NGOÀI: Nếu repo private thì GLB sẽ không tải được qua Github LFS trên Netlify.
+// Lựa chọn 1: Cấu hình đúng GIT_LFS_ENABLED = true trên Netlify UI (Khuyên dùng)
+// Lựa chọn 2: Up file premiumTripleRoom.glb lên một host public (Google Drive/Dropbox direct link) rồi đổi MODEL_PATH thành link đó.
 const MODEL_PATH = '/models/premiumTripleRoom.glb';
 
 const Model = () => {

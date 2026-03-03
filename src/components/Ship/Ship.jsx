@@ -21,6 +21,9 @@ const DeckLight = ({ position }) => (
 );
 
 const Ship = () => {
+    // TẢI TỪ NGUỒN NGOÀI: Nếu repo private thì GLB sẽ không tải được qua Github LFS trên Netlify.
+    // Lựa chọn 1: Cấu hình đúng GIT_LFS_ENABLED = true trên Netlify UI (Khuyên dùng)
+    // Lựa chọn 2: Up file cruise-ship-opt.glb lên một host public (Google Drive/Dropbox direct link) rồi paste link vào đây.
     const { scene } = useGLTF('./models/cruise-ship-opt.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
     const shipRef = useRef();
     const shipModelRotation = [0, (75 * (-Math.PI / 180)), 0];
