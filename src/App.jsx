@@ -8,6 +8,7 @@ import OceanScene from './components/Environment/OceanScene';
 import AdOverlay from './components/UI/AdOverlay';
 import RoomUI from './components/UI/RoomUI';
 import LoadingScreen from './components/UI/LoadingScreen';
+import SceneErrorBoundary from './components/UI/SceneErrorBoundary';
 // import CameraDebugPanel from './components/UI/CameraDebugPanel'; // Debug panel - uncomment khi cần chỉnh camera
 import './index.css';
 
@@ -48,9 +49,11 @@ function App() {
           toneMapping: THREE.ACESFilmicToneMapping
         }}
       >
-        <Suspense fallback={null}>
-          <Experience targetView={targetView} setTargetView={handleViewChange} />
-        </Suspense>
+        <SceneErrorBoundary>
+          <Suspense fallback={null}>
+            <Experience targetView={targetView} setTargetView={handleViewChange} />
+          </Suspense>
+        </SceneErrorBoundary>
       </Canvas>
 
       <AdOverlay

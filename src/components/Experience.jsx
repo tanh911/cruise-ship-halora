@@ -9,8 +9,8 @@ import Water from './Environment/Water';
 import Wake from './Environment/Wake';
 import ZoomControls from './UI/ZoomControls';
 
-import TestRoom from './Scenes/TestRoom';
-import PremiumTripleRoom from './Scenes/PremiumTripleRoom';
+const TestRoom = React.lazy(() => import('./Scenes/TestRoom'));
+const PremiumTripleRoom = React.lazy(() => import('./Scenes/PremiumTripleRoom'));
 
 // Room model is loaded lazily when user enters the room
 
