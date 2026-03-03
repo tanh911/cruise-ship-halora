@@ -44,17 +44,21 @@ const RoomScene = ({ onExit }) => {
 
     return (
         <>
-            {/* Interior lighting - Boosted for warmth and clarity */}
-            <ambientLight intensity={0.5} color="#fffcf0" />
-            <directionalLight position={[10, 20, 10]} intensity={1.5} color="#fff" castShadow />
-            <pointLight position={[0, 5, 0]} intensity={2} color="#ffaa00" distance={10} />
+            {/* Interior lighting - Boosted significantly to compensate for the removal of the ocean scene lights */}
+            <ambientLight intensity={1.2} color="#fffcf0" />
+            <directionalLight position={[10, 20, 10]} intensity={2.5} color="#fff" castShadow />
+            <directionalLight position={[-10, 15, -10]} intensity={1.0} color="#88aacc" />
+            <pointLight position={[0, 5, 0]} intensity={3} color="#ffaa00" distance={15} />
 
-            {/* Environment for reflections only (NO background prop) */}
+            {/* Simple colored background to avoid black canvas */}
+            <color attach="background" args={['#111']} />
+
+            {/* Environment for reflections and background */}
             <Environment
                 preset="apartment"
-                background={false}
-                blur={0.8}
-                backgroundIntensity={0.5}
+                background={true}
+                blur={0.5}
+                backgroundIntensity={0.2}
                 environmentIntensity={0.8}
             />
 

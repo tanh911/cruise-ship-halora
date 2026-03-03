@@ -70,7 +70,12 @@ const BaseScene = ({ targetView, hideShip }) => {
                 />
             )}
 
-            <SkyBox />
+            {!hideShip && (
+                <>
+                    <SkyBox />
+                    <Water />
+                </>
+            )}
 
             {!hideShip && (
                 <>
@@ -123,8 +128,6 @@ const BaseScene = ({ targetView, hideShip }) => {
                     </Suspense>
                 </group>
             )}
-
-            <Water />
 
             {!hideShip && (
                 <EffectComposer disableNormalPass multisampling={0}>

@@ -47,9 +47,10 @@ const TestRoom = () => {
                     <meshStandardMaterial color="orange" />
                 </mesh>
             }>
+                <color attach="background" args={['#111']} />
                 {/* 2. Add lighting manually to ensure visibility if Stage fails */}
-                <ambientLight intensity={0.5} />
-                <pointLight position={[10, 10, 10]} />
+                <ambientLight intensity={1.5} />
+                <pointLight position={[10, 10, 10]} intensity={2} />
 
                 {/* 3. Stage centers the model. If model is huge/tiny, this helps. */}
                 <Stage environment="city" intensity={0.6} adjustCamera>
