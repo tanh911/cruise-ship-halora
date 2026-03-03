@@ -4,6 +4,7 @@ import { useProgress } from '@react-three/drei';
 const LoadingScreen = () => {
     const { active, progress, loaded, total } = useProgress();
     const [hidden, setHidden] = useState(false);
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
     // Calculate a safe percentage to avoid NaN or Infinity if total is 0
     let safeProgress = 0;
@@ -25,14 +26,18 @@ const LoadingScreen = () => {
     useEffect(() => {
         // If Drei says it's not active anymore, or we hit 100%
         if (!active || safeProgress >= 100) {
-            const timer = setTimeout(() => setHidden(true), 800); // 0.8s fade out
+            const timer = setTimeout(() => {
+                setHidden(true);
+                setHasLoadedOnce(true); // Ghi nhận là đã load xong lần đầu
+            }, 800); // 0.8s fade out
             return () => clearTimeout(timer);
-        } else {
+        } else if (!hasLoadedOnce) {
+            // Chỉ hiện lại nếu chưa load xong lần đầu bao giờ
             setHidden(false);
         }
-    }, [active, safeProgress]);
+    }, [active, safeProgress, hasLoadedOnce]);
 
-    if (hidden) return null;
+    if (hidden || hasLoadedOnce) return null;
 
     return (
         <div style={{
