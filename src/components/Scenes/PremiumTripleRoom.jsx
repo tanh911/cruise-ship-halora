@@ -67,14 +67,7 @@ const RoomScene = ({ onExit }) => {
 const PremiumTripleRoom = ({ onExit }) => {
     return (
         <ErrorBoundary>
-            <React.Suspense fallback={
-                <mesh>
-                    <boxGeometry args={[1, 1, 1]} />
-                    <meshStandardMaterial color="orange" wireframe />
-                </mesh>
-            }>
-                <RoomScene onExit={onExit} />
-            </React.Suspense>
+            <RoomScene onExit={onExit} />
         </ErrorBoundary>
     );
 };

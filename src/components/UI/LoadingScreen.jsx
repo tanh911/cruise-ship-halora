@@ -2,17 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { useProgress } from '@react-three/drei';
 
 const LoadingScreen = () => {
-    const { progress, active } = useProgress();
+    const { active, progress, loaded, total } = useProgress();
     const [hidden, setHidden] = useState(false);
 
+    // Calculate a safe percentage to avoid NaN or Infinity if total is 0
+    let safeProgress = 0;
+    if (total > 0) {
+        safeProgress = (loaded / total) * 100;
+    } else if (!active) {
+        safeProgress = 100; // If not active and total is 0, we are done
+    }
+
+    // Fallback to the provided progress if it's a valid number 
+    // (sometimes drei calculates it better based on bytes)
+    if (Number.isFinite(progress) && progress > 0) {
+        safeProgress = progress;
+    }
+
+    // Strictly clamp between 0 and 100
+    safeProgress = Math.min(Math.max(safeProgress, 0), 100);
+
     useEffect(() => {
-        if (!active && progress === 100) {
+        // If Drei says it's not active anymore, or we hit 100%
+        if (!active || safeProgress >= 100) {
             const timer = setTimeout(() => setHidden(true), 800); // 0.8s fade out
             return () => clearTimeout(timer);
         } else {
             setHidden(false);
         }
-    }, [active, progress]);
+    }, [active, safeProgress]);
 
     if (hidden) return null;
 
@@ -31,7 +49,7 @@ const LoadingScreen = () => {
             zIndex: 10000,
             transition: 'opacity 0.8s ease-in-out',
             pointerEvents: 'none',
-            opacity: active ? 1 : 0
+            opacity: (!active || safeProgress >= 100) ? 0 : 1
         }}>
             <div style={{
                 width: '300px',
@@ -61,7 +79,7 @@ const LoadingScreen = () => {
                         left: 0,
                         height: '100%',
                         background: '#d4af37',
-                        width: `${progress}%`,
+                        width: `${safeProgress}%`,
                         transition: 'width 0.3s ease-out',
                         boxShadow: '0 0 10px #d4af37'
                     }} />
@@ -75,7 +93,7 @@ const LoadingScreen = () => {
                     marginTop: '15px',
                     opacity: 0.6
                 }}>
-                    ĐANG TẢI TRẢI NGHIỆM {Math.round(progress)}%
+                    ĐANG TẢI TRẢI NGHIỆM {Math.round(safeProgress)}%
                 </div>
             </div>
         </div>
