@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProgress } from '@react-three/drei';
 
 const LoadingScreen = () => {
     const { progress, active } = useProgress();
+    const [hidden, setHidden] = useState(false);
 
-    if (!active && progress === 100) return null;
+    useEffect(() => {
+        if (!active && progress === 100) {
+            const timer = setTimeout(() => setHidden(true), 800); // 0.8s fade out
+            return () => clearTimeout(timer);
+        } else {
+            setHidden(false);
+        }
+    }, [active, progress]);
+
+    if (hidden) return null;
 
     return (
         <div style={{

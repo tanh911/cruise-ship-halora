@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useTransition, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -9,28 +9,40 @@ import AdOverlay from './components/UI/AdOverlay';
 import RoomUI from './components/UI/RoomUI';
 import LoadingScreen from './components/UI/LoadingScreen';
 import SceneErrorBoundary from './components/UI/SceneErrorBoundary';
-// import CameraDebugPanel from './components/UI/CameraDebugPanel'; // Debug panel - uncomment khi cần chỉnh camera
+// import CameraDebugPanel from './components/UI/CameraDebugPanel'; // Debug panel
 import './index.css';
 
 function App() {
-  const [targetView, setTargetView] = React.useState('default');
-  const [isTransitioning, setIsTransitioning] = React.useState(false);
+  const [targetView, setTargetView] = useState('default');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleViewChange = (newView) => {
     if (newView === targetView) return;
 
-    setIsTransitioning(true);
+    setIsTransitioning(true); // Fade to black
 
-    // Đợi hiệu ứng fade out hoàn tất (0.3s theo CSS mới)
+    // Đợi hiệu ứng fade out hoàn tất (0.3s)
     setTimeout(() => {
-      setTargetView(newView);
-
-      // Đợi thêm một chút để React Three Fiber khởi tạo cảnh mới
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 200);
+      // Dùng startTransition để render component mới ngầm dưới nền
+      // Màn hình đen (transition-overlay) sẽ che phủ phần canvas trong lúc load
+      startTransition(() => {
+        setTargetView(newView);
+      });
     }, 300);
   };
+
+  // Tự động tắt màn hình đen chuyển cảnh khi component mới đã render xong
+  useEffect(() => {
+    if (!isPending && isTransitioning) {
+      // Đợi thêm một chút để React Three Fiber khởi tạo 3D
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isPending, isTransitioning, targetView]);
+
 
   return (
     <div className="app-container">
