@@ -10,13 +10,10 @@ const LoadingScreen = () => {
     let safeProgress = 0;
     if (total > 0) {
         safeProgress = (loaded / total) * 100;
-    } else if (!active) {
-        safeProgress = 100; // If not active and total is 0, we are done
     }
 
     // Fallback to the provided progress if it's a valid number 
-    // (sometimes drei calculates it better based on bytes)
-    if (Number.isFinite(progress) && progress > 0) {
+    if (Number.isFinite(progress) && progress > safeProgress) {
         safeProgress = progress;
     }
 
@@ -24,20 +21,20 @@ const LoadingScreen = () => {
     safeProgress = Math.min(Math.max(safeProgress, 0), 100);
 
     useEffect(() => {
-        // If Drei says it's not active anymore, or we hit 100%
-        if (!active || safeProgress >= 100) {
+        // Chỉ ẩn đi khi thực sự đã load xong (progress = 100)
+        // và đã có ít nhất 1 cái gì đó được tải (total > 0)
+        // hoặc khi Drei báo active = false nhưng progress đã ở mức cao.
+        if (safeProgress >= 100 || (!active && total > 0)) {
             const timer = setTimeout(() => {
                 setHidden(true);
-                setHasLoadedOnce(true); // Ghi nhận là đã load xong lần đầu
-            }, 800); // 0.8s fade out
+                setHasLoadedOnce(true);
+            }, 800);
             return () => clearTimeout(timer);
-        } else if (!hasLoadedOnce) {
-            // Chỉ hiện lại nếu chưa load xong lần đầu bao giờ
-            setHidden(false);
         }
-    }, [active, safeProgress, hasLoadedOnce]);
+    }, [active, safeProgress, total]);
 
-    if (hidden || hasLoadedOnce) return null;
+    // Nếu đã load xong một lần rồi thì biến mất vĩnh viễn
+    if (hasLoadedOnce || hidden) return null;
 
     return (
         <div style={{

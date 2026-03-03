@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { OrbitControls, Environment, Sky, useGLTF } from '@react-three/drei';
 import SkyBox from './Environment/SkyBox';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
@@ -143,7 +143,9 @@ const Experience = ({ targetView, setTargetView }) => {
             {/* Cảnh nền ngoài trời (Ship, Water, Sky) */}
             {/* Dùng transition-ready check: Chỉ ẩn cảnh nền khi KHÔNG phải là default views */}
             {(targetView === 'default' || targetView === 'suite' || targetView === 'sundeck') && (
-                <BaseScene targetView={targetView} />
+                <Suspense fallback={null}>
+                    <BaseScene targetView={targetView} />
+                </Suspense>
             )}
         </>
     );
