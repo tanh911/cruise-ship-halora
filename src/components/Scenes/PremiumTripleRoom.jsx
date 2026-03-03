@@ -22,8 +22,8 @@ class ErrorBoundary extends Component {
     }
 }
 
-// TẢI TỪ NGUỒN NGOÀI: Tải trực tiếp từ Dropbox để vượt qua lỗi Netlify Git LFS
-const MODEL_PATH = 'https://www.dropbox.com/scl/fi/klx1hqhs5lznm4azlot5i/premiumTripleRoom.glb?rlkey=sfoauoiei8j13qeuju611tv8z&st=hrae7vma&raw=1';
+// TẢI TỪ NGUỒN NGOÀI: Tải trực tiếp từ Dropbox (dùng dl.dropboxusercontent.com để tránh lỗi CORS)
+const MODEL_PATH = 'https://dl.dropboxusercontent.com/scl/fi/klx1hqhs5lznm4azlot5i/premiumTripleRoom.glb?rlkey=sfoauoiei8j13qeuju611tv8z&st=hrae7vma';
 
 const Model = () => {
     const { scene } = useGLTF(MODEL_PATH, 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
