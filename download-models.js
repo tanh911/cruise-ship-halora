@@ -1,5 +1,5 @@
 import fs from 'fs';
-import https from 'https';
+import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -17,27 +17,14 @@ const models = [
     }
 ];
 
-const downloadFile = (url, dest) => {
-    return new Promise((resolve, reject) => {
-        console.log(`Downloading ${url} to ${dest}...`);
-        const file = fs.createWriteStream(dest);
-
-        https.get(url, (response) => {
-            if (response.statusCode !== 200) {
-                reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
-                return;
-            }
-
-            response.pipe(file);
-            file.on('finish', () => {
-                file.close();
-                console.log(`Successfully downloaded ${dest}`);
-                resolve();
-            });
-        }).on('error', (err) => {
-            fs.unlink(dest, () => reject(err));
-        });
-    });
+const downloadFile = async (url, dest) => {
+    console.log(`Downloading ${url} to ${dest} using curl...`);
+    try {
+        execSync(`curl -L -o "${dest}" "${url}"`, { stdio: 'inherit' });
+        console.log(`Successfully downloaded ${dest}`);
+    } catch (error) {
+        throw new Error(`Failed to download ${url}: ${error.message}`);
+    }
 };
 
 const run = async () => {
