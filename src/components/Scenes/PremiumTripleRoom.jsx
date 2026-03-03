@@ -22,10 +22,8 @@ class ErrorBoundary extends Component {
     }
 }
 
-// TẢI TỪ NGUỒN NGOÀI: Nếu repo private thì GLB sẽ không tải được qua Github LFS trên Netlify.
-// Lựa chọn 1: Cấu hình đúng GIT_LFS_ENABLED = true trên Netlify UI (Khuyên dùng)
-// Lựa chọn 2: Up file premiumTripleRoom.glb lên một host public (Google Drive/Dropbox direct link) rồi đổi MODEL_PATH thành link đó.
-const MODEL_PATH = '/models/premiumTripleRoom.glb';
+// TẢI TỪ NGUỒN NGOÀI: Tải trực tiếp từ Dropbox để vượt qua lỗi Netlify Git LFS
+const MODEL_PATH = 'https://www.dropbox.com/scl/fi/klx1hqhs5lznm4azlot5i/premiumTripleRoom.glb?rlkey=sfoauoiei8j13qeuju611tv8z&st=hrae7vma&raw=1';
 
 const Model = () => {
     const { scene } = useGLTF(MODEL_PATH, 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
