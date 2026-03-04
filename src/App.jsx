@@ -1,6 +1,6 @@
 import React, { Suspense, useState, useTransition, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
+import { Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import Experience from './components/Experience';
 import Overlay from './components/UI/Overlay';
@@ -11,6 +11,10 @@ import LoadingScreen from './components/UI/LoadingScreen';
 import SceneErrorBoundary from './components/UI/SceneErrorBoundary';
 // import CameraDebugPanel from './components/UI/CameraDebugPanel'; // Debug panel
 import './index.css';
+
+// Preload models globally to avoid delay when switching views
+useGLTF.preload('./models/cruise-ship-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+useGLTF.preload('./models/premiumTripleRoom-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
 
 function App() {
   const [targetView, setTargetView] = useState('default');

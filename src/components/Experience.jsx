@@ -58,6 +58,49 @@ const BaseScene = ({ targetView, hideShip }) => {
 
     return (
         <>
+            <SkyBox />
+            <Water />
+            <Environment preset="sunset" />
+
+            {/* Atmospheric fog for depth */}
+            <fog attach="fog" args={['#1a0a2e', 80, 600]} />
+
+            {/* Main sun light */}
+            <ambientLight intensity={0.4} color="#ff9966" />
+            <directionalLight
+                position={[150, 20, 150]}
+                intensity={2.5}
+                color="#ffccaa"
+                castShadow={true}
+                shadow-mapSize={[2048, 2048]}
+                shadow-bias={-0.0003}
+                shadow-normalBias={0.02}
+                shadow-camera-left={-100}
+                shadow-camera-right={100}
+                shadow-camera-top={100}
+                shadow-camera-bottom={100}
+                shadow-camera-near={1}
+                shadow-camera-far={500}
+            />
+            {/* Fill light (cooler) */}
+            <directionalLight
+                position={[-50, 10, -50]}
+                intensity={0.5}
+                color="#8899bb"
+            />
+            {/* Rim/backlight for dramatic silhouette */}
+            <directionalLight
+                position={[-80, 30, 100]}
+                intensity={1.2}
+                color="#ffddaa"
+            />
+            {/* Warm bounce light from water */}
+            <hemisphereLight
+                skyColor="#ffccaa"
+                groundColor="#003366"
+                intensity={0.3}
+            />
+
             {/* Chỉ bật OrbitControls của BaseScene khi không ở trong phòng */}
             {!hideShip && (
                 <OrbitControls
@@ -70,76 +113,21 @@ const BaseScene = ({ targetView, hideShip }) => {
                 />
             )}
 
-            {!hideShip && (
-                <>
-                    <SkyBox />
-                    <Water />
-                </>
-            )}
+            {/* Ship Model - Hidden when inside room to save resources but Environment stays */}
+            <group position={[0, 1, 5]} visible={!hideShip}>
+                <Suspense fallback={null}>
+                    <Ship />
+                </Suspense>
+            </group>
 
-            {!hideShip && (
-                <>
-                    <Environment preset="sunset" />
-                    {/* Atmospheric fog for depth */}
-                    <fog attach="fog" args={['#1a0a2e', 80, 600]} />
-
-                    {/* Main sun light */}
-                    <ambientLight intensity={0.4} color="#ff9966" />
-                    <directionalLight
-                        position={[150, 20, 150]}
-                        intensity={2.5}
-                        color="#ffccaa"
-                        castShadow={true}
-                        shadow-mapSize={[2048, 2048]}
-                        shadow-bias={-0.0003}
-                        shadow-normalBias={0.02}
-                        shadow-camera-left={-100}
-                        shadow-camera-right={100}
-                        shadow-camera-top={100}
-                        shadow-camera-bottom={100}
-                        shadow-camera-near={1}
-                        shadow-camera-far={500}
-                    />
-                    {/* Fill light (cooler) */}
-                    <directionalLight
-                        position={[-50, 10, -50]}
-                        intensity={0.5}
-                        color="#8899bb"
-                    />
-                    {/* Rim/backlight for dramatic silhouette */}
-                    <directionalLight
-                        position={[-80, 30, 100]}
-                        intensity={1.2}
-                        color="#ffddaa"
-                    />
-                    {/* Warm bounce light from water */}
-                    <hemisphereLight
-                        skyColor="#ffccaa"
-                        groundColor="#003366"
-                        intensity={0.3}
-                    />
-                </>
-            )}
-
-            {!hideShip && (
-                <group position={[0, 1, 5]}>
-                    <Suspense fallback={null}>
-                        <Ship />
-                    </Suspense>
-                </group>
-            )}
-
-            {!hideShip && (
-                <EffectComposer disableNormalPass multisampling={0}>
-                    <Bloom
-                        luminanceThreshold={0.8}
-                        intensity={0.5}
-                        radius={0.6}
-                        mipmapBlur
-                    />
-                </EffectComposer>
-            )}
-
+            <EffectComposer disableNormalPass multisampling={0}>
+                <Bloom
+                    luminanceThreshold={0.8}
+                    intensity={0.5}
+                    radius={0.6}
+                    mipmapBlur
+                />
+            </EffectComposer>
         </>
     );
 };
