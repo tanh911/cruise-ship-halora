@@ -22,15 +22,15 @@ const vertexShader = `
     inout vec3 binormal
   ) {
     float wavelength = max(wave.z, 0.01);
-    float k = 2.0 * PI / wavelength;
-    float speed = sqrt(9.8 / k) * wave.w;
+    float k = 2.0 * PI / (wavelength + 0.000001); // Epsilon to avoid division by zero
+    float speed = sqrt(9.8 / (k + 0.000001)) * wave.w;
 
     float dirRad = radians(wave.x);
-    vec2 d = normalize(vec2(cos(dirRad), sin(dirRad)));
+    vec2 d = normalize(vec2(cos(dirRad), sin(dirRad)) + 0.000001);
 
     // Use pos.xy because planeGeometry is in XY plane before rotation
     float f = k * (dot(d, pos.xy) - speed * time);
-    float a = steepness / k;
+    float a = steepness / (k + 0.000001);
 
     float cosF = cos(f);
     float sinF = sin(f);

@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 
 const CameraDebugPanel = () => {
-    const [pos, setPos] = useState({ x: 1.5, y: -0.5, z: 6 });
-    const [lookAt, setLookAt] = useState({ x: 2, y: 2, z: 3.5 });
+    const [pos, setPos] = useState({ x: 3.5, y: 0, z: -2 });
+    const [lookAt, setLookAt] = useState({ x: 3.5, y: 0, z: -8 });
     const [fov, setFov] = useState(90);
 
     const updatePos = useCallback((axis, value) => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, Suspense } from 'react';
+import React, { useEffect, useRef, useState, Suspense, useCallback } from 'react';
 import { OrbitControls, Environment, Sky, useGLTF } from '@react-three/drei';
 import SkyBox from './Environment/SkyBox';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
@@ -10,15 +10,35 @@ import Wake from './Environment/Wake';
 import ZoomControls from './UI/ZoomControls';
 
 const TestRoom = React.lazy(() => import('./Scenes/TestRoom'));
-const PremiumTripleRoom = React.lazy(() => import('./Scenes/PremiumTripleRoom'));
+import PremiumTripleRoom from './Scenes/PremiumTripleRoom';
 
 // Room model is loaded lazily when user enters the room
 
 // Separate component for the ocean scene to isolate hooks
+const DEFAULT_CAM_POS = new THREE.Vector3(67.5, 30, 25.5);
+const DEFAULT_LOOK_AT = new THREE.Vector3(0, 0, 0);
+
 const BaseScene = ({ targetView, hideShip }) => {
     const controlsRef = useRef();
     const [targetPos, setTargetPos] = useState(new THREE.Vector3(67.5, 30, 25.5));
     const [targetLookAt, setTargetLookAt] = useState(new THREE.Vector3(0, 0, 0));
+    const wasInsideRoom = useRef(false);
+
+    const { camera } = useThree();
+
+    useEffect(() => {
+        // Detect khi vừa rời phòng → snap camera ngay lập tức
+        if (wasInsideRoom.current && !hideShip) {
+            camera.position.copy(DEFAULT_CAM_POS);
+            camera.fov = 70;
+            camera.updateProjectionMatrix();
+            if (controlsRef.current) {
+                controlsRef.current.target.copy(DEFAULT_LOOK_AT);
+                controlsRef.current.update();
+            }
+        }
+        wasInsideRoom.current = hideShip;
+    }, [hideShip, camera]);
 
     useEffect(() => {
         // Chỉ chạy logic camera nếu KHÔNG ở trong phòng
@@ -37,7 +57,6 @@ const BaseScene = ({ targetView, hideShip }) => {
     }, [targetView, hideShip]);
 
     // Reset FOV khi quay về toàn cảnh thuyền
-    const { camera } = useThree();
     useEffect(() => {
         if (!hideShip && (targetView === 'default' || targetView === 'suite' || targetView === 'sundeck')) {
             camera.fov = 70;
@@ -72,26 +91,29 @@ const BaseScene = ({ targetView, hideShip }) => {
 
             {/* Ship Model - Hidden when inside room to save resources */}
             <group position={[0, 1, 5]} visible={!hideShip}>
-                <Suspense fallback={null}>
-                    <Ship />
-                </Suspense>
+                <Ship />
             </group>
         </>
     );
 };
 
-const Experience = ({ targetView, setTargetView }) => {
+const Experience = ({ targetView, setTargetView, onReady }) => {
     const isInsideRoom = targetView === 'testroom' || targetView === 'premiumtripleroom';
+
+    useEffect(() => {
+        if (onReady) onReady();
+    }, [onReady]);
 
     return (
         <>
-            {/* STABLE GLOBAL ENVIRONMENT - Stays put, no remounting */}
-            <SkyBox />
-            <Water />
+            {/* STABLE GLOBAL ENVIRONMENT - Hidden when inside room */}
+            {!isInsideRoom && <SkyBox />}
+            {!isInsideRoom && <Water />}
 
-            <fog attach="fog" args={['#1a0a2e', 80, 600]} />
+            {/* Tắt fog khi ở trong phòng để tránh che phủ cảnh phòng */}
+            {!isInsideRoom && <fog attach="fog" args={['#1a0a2e', 80, 600]} />}
 
-            <ambientLight intensity={0.4} color="#ff9966" />
+            <ambientLight intensity={isInsideRoom ? 0.8 : 0.4} color="#ff9966" />
             <directionalLight
                 position={[150, 20, 150]}
                 intensity={2.5}
@@ -105,23 +127,27 @@ const Experience = ({ targetView, setTargetView }) => {
             <directionalLight position={[-80, 30, 100]} intensity={1.2} color="#ffddaa" />
             <hemisphereLight skyColor="#ffccaa" groundColor="#003366" intensity={0.3} />
 
-            <Suspense fallback={null}>
-                {/* Environment and Models can suspend - Background (Sky/Water) stays stable */}
-                <Environment preset="sunset" />
+            {/* BASE SCENE / CAMERA - Must stay mounted to provide stability */}
+            <BaseScene targetView={isInsideRoom ? 'default' : targetView} hideShip={isInsideRoom} />
 
-                {/* BASE SCENE / SHIP - Controlled by visibility */}
-                <BaseScene targetView={isInsideRoom ? 'default' : targetView} hideShip={isInsideRoom} />
+            {/* ROOMS - PremiumTripleRoom mounted directly (not lazy) for reliable rendering */}
+            {targetView === 'premiumtripleroom' && (
+                <PremiumTripleRoom onExit={() => setTargetView('default')} />
+            )}
+
+            <Suspense fallback={null}>
+                {/* Environment and Models can suspend - Background stays stable */}
+                <Environment preset="sunset" />
 
                 {/* ROOMS */}
                 {targetView === 'testroom' && <TestRoom />}
-                {targetView === 'premiumtripleroom' && (
-                    <PremiumTripleRoom onExit={() => setTargetView('default')} />
-                )}
             </Suspense>
 
-            <EffectComposer disableNormalPass multisampling={0}>
-                <Bloom luminanceThreshold={0.8} intensity={0.5} radius={0.6} mipmapBlur />
-            </EffectComposer>
+            {!isInsideRoom && (
+                <EffectComposer disableNormalPass multisampling={0}>
+                    <Bloom luminanceThreshold={0.8} intensity={0.5} radius={0.6} mipmapBlur />
+                </EffectComposer>
+            )}
         </>
     );
 };

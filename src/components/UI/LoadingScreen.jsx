@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useProgress } from '@react-three/drei';
 
-const LoadingScreen = () => {
+const LoadingScreen = ({ isSceneReady }) => {
     const { active, progress, loaded, total } = useProgress();
     const [isFinished, setIsFinished] = useState(false);
     const [shouldUnmount, setShouldUnmount] = useState(false);
@@ -21,17 +21,17 @@ const LoadingScreen = () => {
     safeProgress = Math.min(Math.max(safeProgress, 0), 100);
 
     useEffect(() => {
-        // Chỉ kích hoạt trạng thái "Xong" một lần duy nhất.
-        // Khi đã xong (isFinished = true), chúng ta không bao giờ quay lại trạng thái loading nữa,
-        // kể cả khi có tài nguyên chạy ngầm khởi động lại useProgress.
-        if (!isFinished && (safeProgress >= 100 || (!active && total > 0))) {
+        // Only finish if progress is 100% AND the 3D scene confirms it's ready
+        const isProgressDone = safeProgress >= 100 || (!active && total > 0);
+
+        if (!isFinished && isProgressDone && isSceneReady) {
             setIsFinished(true);
             const timer = setTimeout(() => {
                 setShouldUnmount(true);
-            }, 1000); // Đợi 1s (bao gồm 0.8s transition mờ dần) rồi gỡ bỏ hoàn toàn
+            }, 1500); // Đợi 1.5s để đảm bảo chuyển cảnh mượt mà
             return () => clearTimeout(timer);
         }
-    }, [safeProgress, active, total, isFinished]);
+    }, [safeProgress, active, total, isFinished, isSceneReady]);
 
     if (shouldUnmount) return null;
 

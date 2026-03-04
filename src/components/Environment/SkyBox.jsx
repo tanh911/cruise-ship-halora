@@ -14,8 +14,8 @@ const fragmentShader = `
   uniform vec3 uSunPosition;
 
   void main() {
-    vec3 dir = normalize(vDir);
-    vec3 sunDir = normalize(uSunPosition);
+    vec3 dir = normalize(vDir + 0.000001);
+    vec3 sunDir = normalize(uSunPosition + 0.000001);
     float sunDot = dot(dir, sunDir);
     float h = clamp(dir.y, 0.0, 1.0);
 
@@ -26,7 +26,7 @@ const fragmentShader = `
     vec3 sunColor = vec3(0.8, 0.7, 0.5);
 
     // Balanced sky gradient
-    vec3 color = mix(horizon, zenith, pow(max(0.0, h), 0.5));
+    vec3 color = mix(horizon, zenith, pow(max(0.000001, h), 0.5));
     
     // Atmospheric Haze
     float haze = pow(max(0.0, sunDot), 6.0);

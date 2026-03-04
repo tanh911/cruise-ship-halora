@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useTransition, useEffect } from 'react';
+import React, { Suspense, useState, useTransition, useEffect, useCallback, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -9,7 +9,7 @@ import AdOverlay from './components/UI/AdOverlay';
 import RoomUI from './components/UI/RoomUI';
 import LoadingScreen from './components/UI/LoadingScreen';
 import SceneErrorBoundary from './components/UI/SceneErrorBoundary';
-// import CameraDebugPanel from './components/UI/CameraDebugPanel'; // Debug panel
+import SceneTransition from './components/UI/SceneTransition';
 import './index.css';
 
 // Preload models globally to avoid delay when switching views
@@ -20,21 +20,43 @@ useGLTF.preload('./models/test_room.glb');
 function App() {
   const [targetView, setTargetView] = useState('default');
   const [isPending, startTransition] = useTransition();
+  const [isSceneReady, setIsSceneReady] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const pendingView = useRef(null);
 
-  const handleViewChange = (newView) => {
+  const handleViewChange = useCallback((newView) => {
     if (newView === targetView) return;
 
-    // Sử dụng startTransition để render component 3D mới ngầm dưới nền.
-    // Kết hợp với việc dời Suspense vào bên trong từng component (Experience.jsx),
-    // giúp loại bỏ hoàn toàn hiện tượng nháy đen khi chuyển cảnh.
-    startTransition(() => {
-      setTargetView(newView);
-    });
-  };
+    // Trigger transition animation
+    pendingView.current = newView;
+    setIsTransitioning(true);
+  }, [targetView]);
+
+  // Called at the midpoint of the transition (screen is fully dark)
+  const handleTransitionMidpoint = useCallback(() => {
+    if (pendingView.current) {
+      setTargetView(pendingView.current);
+      pendingView.current = null;
+    }
+  }, []);
+
+  // Called when transition completely finishes fading out
+  const handleTransitionComplete = useCallback(() => {
+    setIsTransitioning(false);
+  }, []);
+
+  const handleReady = useCallback(() => {
+    setIsSceneReady(true);
+  }, []);
 
   return (
     <div className="app-container">
-      <LoadingScreen />
+      <LoadingScreen isSceneReady={isSceneReady} />
+      <SceneTransition
+        isTransitioning={isTransitioning}
+        onMidpoint={handleTransitionMidpoint}
+        onComplete={handleTransitionComplete}
+      />
 
       <Canvas
         camera={{ position: [67.5, 30, 25.5], fov: 70, near: 0.1, far: 5000 }}
@@ -47,7 +69,11 @@ function App() {
         }}
       >
         <SceneErrorBoundary>
-          <Experience targetView={targetView} setTargetView={handleViewChange} />
+          <Experience
+            targetView={targetView}
+            setTargetView={handleViewChange}
+            onReady={handleReady}
+          />
         </SceneErrorBoundary>
       </Canvas>
 
@@ -62,7 +88,6 @@ function App() {
       />
 
       <div style={{ height: '200vh', pointerEvents: 'none' }}></div>
-      {/* <CameraDebugPanel /> */}
     </div>
   );
 }
