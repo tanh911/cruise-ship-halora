@@ -58,49 +58,6 @@ const BaseScene = ({ targetView, hideShip }) => {
 
     return (
         <>
-            <SkyBox />
-            <Water />
-            <Environment preset="sunset" />
-
-            {/* Atmospheric fog for depth */}
-            <fog attach="fog" args={['#1a0a2e', 80, 600]} />
-
-            {/* Main sun light */}
-            <ambientLight intensity={0.4} color="#ff9966" />
-            <directionalLight
-                position={[150, 20, 150]}
-                intensity={2.5}
-                color="#ffccaa"
-                castShadow={true}
-                shadow-mapSize={[2048, 2048]}
-                shadow-bias={-0.0003}
-                shadow-normalBias={0.02}
-                shadow-camera-left={-100}
-                shadow-camera-right={100}
-                shadow-camera-top={100}
-                shadow-camera-bottom={100}
-                shadow-camera-near={1}
-                shadow-camera-far={500}
-            />
-            {/* Fill light (cooler) */}
-            <directionalLight
-                position={[-50, 10, -50]}
-                intensity={0.5}
-                color="#8899bb"
-            />
-            {/* Rim/backlight for dramatic silhouette */}
-            <directionalLight
-                position={[-80, 30, 100]}
-                intensity={1.2}
-                color="#ffddaa"
-            />
-            {/* Warm bounce light from water */}
-            <hemisphereLight
-                skyColor="#ffccaa"
-                groundColor="#003366"
-                intensity={0.3}
-            />
-
             {/* Chỉ bật OrbitControls của BaseScene khi không ở trong phòng */}
             {!hideShip && (
                 <OrbitControls
@@ -113,50 +70,54 @@ const BaseScene = ({ targetView, hideShip }) => {
                 />
             )}
 
-            {/* Ship Model - Hidden when inside room to save resources but Environment stays */}
+            {/* Ship Model - Hidden when inside room to save resources */}
             <group position={[0, 1, 5]} visible={!hideShip}>
                 <Suspense fallback={null}>
                     <Ship />
                 </Suspense>
             </group>
-
-            <EffectComposer disableNormalPass multisampling={0}>
-                <Bloom
-                    luminanceThreshold={0.8}
-                    intensity={0.5}
-                    radius={0.6}
-                    mipmapBlur
-                />
-            </EffectComposer>
         </>
     );
 };
 
-// Experience is now a simple router - no hooks, no conflicts
 const Experience = ({ targetView, setTargetView }) => {
-    // Luôn giữ BaseScene mounted để tránh chớp giật khi khởi tạo lại Ship/Water
-    // Chúng ta chỉ thay đổi góc máy hoặc ẩn model Ship khi cần thiết
     const isInsideRoom = targetView === 'testroom' || targetView === 'premiumtripleroom';
 
     return (
         <>
-            {/* Cảnh nền (Sea, Sky, Environment) luôn hiện diện */}
-            {/* Ship chỉ ẩn đi khi thực sự đã ở trong phòng để tiết kiệm tài nguyên và tránh che mắt */}
-            <Suspense fallback={null}>
-                <BaseScene targetView={isInsideRoom ? 'default' : targetView} hideShip={isInsideRoom} />
-            </Suspense>
+            {/* STABLE GLOBAL ENVIRONMENT - Stays put, no remounting */}
+            <SkyBox />
+            <Water />
+            <Environment preset="sunset" />
 
-            {/* Các phòng load theo yêu cầu - Mỗi phòng có Suspense riêng */}
-            {targetView === 'testroom' && (
-                <Suspense fallback={null}>
-                    <TestRoom />
-                </Suspense>
-            )}
+            <fog attach="fog" args={['#1a0a2e', 80, 600]} />
 
+            <ambientLight intensity={0.4} color="#ff9966" />
+            <directionalLight
+                position={[150, 20, 150]}
+                intensity={2.5}
+                color="#ffccaa"
+                castShadow={true}
+                shadow-mapSize={[2048, 2048]}
+                shadow-bias={-0.0003}
+                shadow-normalBias={0.02}
+            />
+            <directionalLight position={[-50, 10, -50]} intensity={0.5} color="#8899bb" />
+            <directionalLight position={[-80, 30, 100]} intensity={1.2} color="#ffddaa" />
+            <hemisphereLight skyColor="#ffccaa" groundColor="#003366" intensity={0.3} />
+
+            <EffectComposer disableNormalPass multisampling={0}>
+                <Bloom luminanceThreshold={0.8} intensity={0.5} radius={0.6} mipmapBlur />
+            </EffectComposer>
+
+            {/* BASE SCENE / SHIP - Controlled by visibility */}
+            {/* We don't hide BaseScene entirely, just the Ship inside it */}
+            <BaseScene targetView={isInsideRoom ? 'default' : targetView} hideShip={isInsideRoom} />
+
+            {/* ROOMS - No local Suspense here so App's startTransition can hold the previous view */}
+            {targetView === 'testroom' && <TestRoom />}
             {targetView === 'premiumtripleroom' && (
-                <Suspense fallback={null}>
-                    <PremiumTripleRoom onExit={() => setTargetView('default')} />
-                </Suspense>
+                <PremiumTripleRoom onExit={() => setTargetView('default')} />
             )}
         </>
     );

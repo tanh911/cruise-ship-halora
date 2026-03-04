@@ -15,6 +15,7 @@ import './index.css';
 // Preload models globally to avoid delay when switching views
 useGLTF.preload('./models/cruise-ship-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
 useGLTF.preload('./models/premiumTripleRoom-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+useGLTF.preload('./models/test_room.glb');
 
 function App() {
   const [targetView, setTargetView] = useState('default');
@@ -46,7 +47,9 @@ function App() {
         }}
       >
         <SceneErrorBoundary>
-          <Experience targetView={targetView} setTargetView={handleViewChange} />
+          <Suspense fallback={null}>
+            <Experience targetView={targetView} setTargetView={handleViewChange} />
+          </Suspense>
         </SceneErrorBoundary>
       </Canvas>
 

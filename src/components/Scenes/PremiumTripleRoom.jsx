@@ -66,18 +66,14 @@ const RoomScene = ({ onExit }) => {
 
     return (
         <>
-            <color attach="background" args={['#111']} />
-
-            <Suspense fallback={null}>
-                <Stage
-                    environment="apartment"
-                    intensity={0.5}
-                    adjustCamera={false}
-                    center={true}
-                >
-                    <Model />
-                </Stage>
-            </Suspense>
+            <Stage
+                environment="apartment"
+                intensity={0.5}
+                adjustCamera={false}
+                center={true}
+            >
+                <Model />
+            </Stage>
 
             <OrbitControls
                 ref={controlsRef}
