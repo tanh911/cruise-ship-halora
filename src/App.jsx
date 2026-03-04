@@ -47,9 +47,7 @@ function App() {
         }}
       >
         <SceneErrorBoundary>
-          <Suspense fallback={null}>
-            <Experience targetView={targetView} setTargetView={handleViewChange} />
-          </Suspense>
+          <Experience targetView={targetView} setTargetView={handleViewChange} />
         </SceneErrorBoundary>
       </Canvas>
 

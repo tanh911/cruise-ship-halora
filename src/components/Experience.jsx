@@ -88,7 +88,6 @@ const Experience = ({ targetView, setTargetView }) => {
             {/* STABLE GLOBAL ENVIRONMENT - Stays put, no remounting */}
             <SkyBox />
             <Water />
-            <Environment preset="sunset" />
 
             <fog attach="fog" args={['#1a0a2e', 80, 600]} />
 
@@ -106,19 +105,23 @@ const Experience = ({ targetView, setTargetView }) => {
             <directionalLight position={[-80, 30, 100]} intensity={1.2} color="#ffddaa" />
             <hemisphereLight skyColor="#ffccaa" groundColor="#003366" intensity={0.3} />
 
+            <Suspense fallback={null}>
+                {/* Environment and Models can suspend - Background (Sky/Water) stays stable */}
+                <Environment preset="sunset" />
+
+                {/* BASE SCENE / SHIP - Controlled by visibility */}
+                <BaseScene targetView={isInsideRoom ? 'default' : targetView} hideShip={isInsideRoom} />
+
+                {/* ROOMS */}
+                {targetView === 'testroom' && <TestRoom />}
+                {targetView === 'premiumtripleroom' && (
+                    <PremiumTripleRoom onExit={() => setTargetView('default')} />
+                )}
+            </Suspense>
+
             <EffectComposer disableNormalPass multisampling={0}>
                 <Bloom luminanceThreshold={0.8} intensity={0.5} radius={0.6} mipmapBlur />
             </EffectComposer>
-
-            {/* BASE SCENE / SHIP - Controlled by visibility */}
-            {/* We don't hide BaseScene entirely, just the Ship inside it */}
-            <BaseScene targetView={isInsideRoom ? 'default' : targetView} hideShip={isInsideRoom} />
-
-            {/* ROOMS - No local Suspense here so App's startTransition can hold the previous view */}
-            {targetView === 'testroom' && <TestRoom />}
-            {targetView === 'premiumtripleroom' && (
-                <PremiumTripleRoom onExit={() => setTargetView('default')} />
-            )}
         </>
     );
 };
