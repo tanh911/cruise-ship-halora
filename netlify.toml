@@ -5,9 +5,22 @@
 [build.environment]
   NODE_VERSION = "18"
 
+[[redirects]]
+  from = "/models/*"
+  to = "/models/:splat"
+  status = 200
+  force = true
+
 [[headers]]
-  for = "/models/*"
+  for = "/models/*.glb"
   [headers.values]
+    Content-Type = "model/gltf-binary"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/models/*.gltf"
+  [headers.values]
+    Content-Type = "model/gltf+json"
     Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]

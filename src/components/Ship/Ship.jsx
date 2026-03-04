@@ -22,7 +22,7 @@ const DeckLight = ({ position }) => (
 
 const Ship = () => {
     // TẢI TỪ NGUỒN NGOÀI: Tải trực tiếp từ Dropbox (dùng dl.dropboxusercontent.com để tránh lỗi CORS)
-    const { scene } = useGLTF('/models/cruise-ship-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+    const { scene } = useGLTF('./models/cruise-ship-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
     const shipRef = useRef();
     const shipModelRotation = [0, (75 * (-Math.PI / 180)), 0];
 
@@ -125,6 +125,6 @@ const Ship = () => {
     );
 };
 
-useGLTF.preload('/models/cruise-ship-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+useGLTF.preload('./models/cruise-ship-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
 
 export default Ship;

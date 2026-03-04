@@ -23,7 +23,7 @@ class ErrorBoundary extends Component {
 }
 
 // TẢI TỪ NGUỒN NGOÀI: Tải trực tiếp từ Dropbox
-const MODEL_PATH = '/models/premiumTripleRoom-optimized.glb';
+const MODEL_PATH = './models/premiumTripleRoom-optimized.glb';
 
 const Model = () => {
     const { scene } = useGLTF(MODEL_PATH, 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
