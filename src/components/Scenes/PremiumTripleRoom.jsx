@@ -1,159 +1,134 @@
-import React, { Component, useEffect, useRef, useLayoutEffect, useState } from 'react';
-import { useGLTF, OrbitControls, Environment } from '@react-three/drei';
-import { useThree, useFrame } from '@react-three/fiber';
+import React, { useRef, Suspense, useEffect, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { useGLTF, PerspectiveCamera, Environment, ContactShadows, Html } from '@react-three/drei';
 import * as THREE from 'three';
 
-class ErrorBoundary extends Component {
-    constructor(props) {
-        super(props);
-        this.state = { hasError: false };
-    }
-    static getDerivedStateFromError(error) { return { hasError: true }; }
-    componentDidCatch(error, errorInfo) { console.error("PremiumTripleRoom Error:", error, errorInfo); }
-    render() {
-        if (this.state.hasError) {
-            return (
-                <group>
-                    <mesh><boxGeometry args={[1, 1, 1]} /><meshStandardMaterial color="red" /></mesh>
-                    <hemisphereLight intensity={0.5} />
-                </group>
-            );
-        }
-        return this.props.children;
-    }
-}
-
-const MODEL_PATH = './models/premiumTripleRoom-optimized.glb';
+const MODEL_PATH = '/models/premiumTripleRoom-raw-processed.glb';
 
 const Model = React.forwardRef((props, ref) => {
-    const { scene } = useGLTF(MODEL_PATH, 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-
-    useEffect(() => {
-        console.log('[PremiumTripleRoom] Model loaded successfully');
-        const box = new THREE.Box3().setFromObject(scene);
-        const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
-        console.log('[PremiumTripleRoom] Model bounds:', {
-            min: box.min.toArray(),
-            max: box.max.toArray(),
-            size: size.toArray(),
-            center: center.toArray()
-        });
-
-        // Enhance materials for room
-        scene.traverse((child) => {
-            if (child.isMesh && child.material) {
-                child.material.envMapIntensity = 1.0;
-                child.material.needsUpdate = true;
-            }
-        });
-    }, [scene]);
-
-    return <primitive ref={ref} object={scene} />;
+    const { scene } = useGLTF(MODEL_PATH);
+    return <primitive ref={ref} object={scene} {...props} />;
 });
 
-useGLTF.preload(MODEL_PATH, 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+const CustomControls = () => {
+    const { camera, gl } = useThree();
+    const keys = useRef({});
+    const isDragging = useRef(false);
+    const previousMouseX = useRef(0);
 
-// Known model bounds from debug:
-// center: [3.49, -1.25, -5.95], size: [13.18, 8.56, 14.41]
-// So room spans approx X: [-3.1, 10.1], Y: [-5.5, 3.1], Z: [-13.2, 1.3]
-// Eye level (standing) should be around Y = 0 to 1 (above center)
-const ROOM_CAMERA_POS = [5, -7.5, -2];        // Inside room, slightly toward entrance
-const ROOM_LOOK_AT = [3.5, -1.5, -7.5];             // Looking toward far wall
+    // Draggable HUD Position
+    const [hudPos, setHudPos] = useState({ x: 20, y: 20 }); // Start top-left for visibility
+    const isHudDragging = useRef(false);
+    const hudStartPos = useRef({ x: 0, y: 0 });
 
-const RoomScene = ({ onExit }) => {
-    const { camera, scene: threeScene, gl } = useThree();
-    const controlsRef = useRef();
+    useEffect(() => {
+        console.log("CustomControls Mounted - HUD Ready");
 
-    useLayoutEffect(() => {
-        // Save and set scene background for room (prevents black bg when Sky/Water hidden)
-        const prevBackground = threeScene.background;
-        threeScene.background = new THREE.Color('#2a2a3a');
+        const handleKeyDown = (e) => (keys.current[e.key.toLowerCase()] = true);
+        const handleKeyUp = (e) => (keys.current[e.key.toLowerCase()] = false);
 
-        // Xoá fog khỏi scene khi vào phòng
-        const prevFog = threeScene.fog;
-        threeScene.fog = null;
-
-        console.log('[PremiumTripleRoom] Setting up camera at', ROOM_CAMERA_POS, 'looking at', ROOM_LOOK_AT);
-
-        // Set camera for interior view
-        camera.position.set(...ROOM_CAMERA_POS);
-        camera.lookAt(new THREE.Vector3(...ROOM_LOOK_AT));
-        camera.fov = 90;
-        camera.near = 0.01;
-        camera.far = 100;
-        camera.updateProjectionMatrix();
-
-        // Đăng ký các hàm global để Debug Panel có thể điều khiển
-        window.__setCameraPos = (x, y, z) => {
-            camera.position.set(x, y, z);
+        const handleMouseDown = (e) => {
+            if (e.target.closest('.hud-container')) return;
+            isDragging.current = true;
+            previousMouseX.current = e.clientX;
         };
-        window.__setCameraLookAt = (x, y, z) => {
-            if (controlsRef.current) {
-                controlsRef.current.target.set(x, y, z);
+
+        const handleMouseMove = (e) => {
+            if (isHudDragging.current) {
+                setHudPos({
+                    x: e.clientX - hudStartPos.current.x,
+                    y: e.clientY - hudStartPos.current.y
+                });
+                return;
             }
+            if (!isDragging.current) return;
+            const deltaX = e.clientX - previousMouseX.current;
+            camera.rotation.y -= deltaX * 0.005;
+            previousMouseX.current = e.clientX;
         };
-        window.__setCameraFov = (fov) => {
-            camera.fov = fov;
-            camera.updateProjectionMatrix();
+
+        const handleMouseUp = () => {
+            isDragging.current = false;
+            isHudDragging.current = false;
         };
+
+        const handleWheel = (e) => {
+            const forward = new THREE.Vector3();
+            camera.getWorldDirection(forward);
+            forward.y = 0; // Lock vertical movement
+            forward.normalize();
+
+            // Move along the vector
+            const moveSpeed = e.deltaY * 0.005;
+            camera.position.addScaledVector(forward, -moveSpeed);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        gl.domElement.addEventListener('mousedown', handleMouseDown);
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        gl.domElement.addEventListener('wheel', handleWheel, { passive: false });
 
         return () => {
-            threeScene.background = prevBackground;
-            threeScene.fog = prevFog;
-            camera.near = 0.1;
-            camera.far = 5000;
-            camera.updateProjectionMatrix();
-            delete window.__setCameraPos;
-            delete window.__setCameraLookAt;
-            delete window.__setCameraFov;
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+            gl.domElement.removeEventListener('mousedown', handleMouseDown);
+            window.removeEventListener('mousemove', handleMouseMove);
+            gl.domElement.removeEventListener('mouseup', handleMouseUp);
+            gl.domElement.removeEventListener('wheel', handleWheel);
         };
-    }, [camera, threeScene]);
+    }, [camera, gl]);
 
-    return (
-        <>
-            {/* Room-specific lighting - bright enough for interior */}
-            <ambientLight intensity={1.5} color="#ffffff" />
-            <directionalLight position={[5, 8, 5]} intensity={2.0} color="#fff5e6" />
-            <directionalLight position={[-3, 5, -2]} intensity={1.2} color="#e6f0ff" />
-            <pointLight position={[3.5, 2, -6]} intensity={2.0} distance={20} color="#ffeecc" />
-            <pointLight position={[3.5, 2, -2]} intensity={1.5} distance={15} color="#ffffff" />
-            <hemisphereLight skyColor="#ffffff" groundColor="#444444" intensity={0.8} />
+    const onHudMouseDown = (e) => {
+        e.stopPropagation();
+        isHudDragging.current = true;
+        hudStartPos.current = {
+            x: e.clientX - hudPos.x,
+            y: e.clientY - hudPos.y
+        };
+    };
 
-            {/* Room environment for reflections */}
-            <Environment preset="apartment" />
+    useFrame((state, delta) => {
+        const rotateSpeed = 1.2 * delta;
+        if (keys.current['k']) camera.rotation.y += rotateSpeed;
+        if (keys.current['l']) camera.rotation.y -= rotateSpeed;
 
-            {/* Model at original coordinates */}
-            <Model />
+        // Clamp Horizontal Rotation: Right (-1.01) to Left (0.99)
+        camera.rotation.y = THREE.MathUtils.clamp(camera.rotation.y, -1.01, 0.99);
 
-            <OrbitControls
-                ref={controlsRef}
-                makeDefault
-                enableZoom={false}
-                minDistance={0.5}
-                maxDistance={30}
-                enablePan={true}
-                enableDamping={true}
-                dampingFactor={0.05}
-                rotateSpeed={0.5}
-                target={ROOM_LOOK_AT}
-                // Khóa xoay dọc tại góc nhìn hiện tại
-                minPolarAngle={Math.PI / 3}
-                maxPolarAngle={Math.PI / 2.5}
-                // Giới hạn góc quay ngang
-                minAzimuthAngle={-Math.PI / 24}
-                maxAzimuthAngle={Math.PI / 6}
-            />
-        </>
-    );
+        // Lock Height at eye-level
+        camera.position.y = 2.3;
+
+        // Clamp Position bounds to keep inside room
+        camera.position.x = THREE.MathUtils.clamp(camera.position.x, 3.5, 6.5);
+        camera.position.z = THREE.MathUtils.clamp(camera.position.z, -1.5, 4.5);
+    });
+
+    return null;
 };
 
-const PremiumTripleRoom = ({ onExit }) => {
-    return (
-        <ErrorBoundary>
-            <RoomScene onExit={onExit} />
-        </ErrorBoundary>
-    );
-};
+export default function PremiumTripleRoom({ onExit, onReady }) {
+    const groupRef = useRef();
 
-export default PremiumTripleRoom;
+    useEffect(() => {
+        if (onReady) onReady();
+    }, [onReady]);
+
+    return (
+        <group ref={groupRef}>
+            <CustomControls />
+            <PerspectiveCamera makeDefault position={[5.21, 2.3, 0.97]} fov={50} />
+            <Suspense fallback={null}>
+                <Environment preset="apartment" />
+                <Model position={[0, 0, 0]} scale={1} />
+                <ContactShadows resolution={1024} scale={50} blur={2} opacity={0.35} far={10} color="#000000" />
+            </Suspense>
+
+            <ambientLight intensity={1.0} />
+            <hemisphereLight intensity={0.8} color="#ffffff" groundColor="#444444" />
+            <pointLight position={[5, 10, 5]} intensity={1.5} castShadow />
+            <pointLight position={[-5, 10, -5]} intensity={1.0} />
+        </group>
+    );
+}

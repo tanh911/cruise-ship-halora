@@ -1,19 +1,23 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Cloud, Sparkles } from '@react-three/drei';
 
-const FoamParticle = ({ position, scale, speed }) => {
+const FoamParticle = ({ position, scale, speedMultiplier = 1 }) => {
     const meshRef = useRef();
+    // Default base speed that feels good at current scrollSpeed
+    const baseSpeed = 0.4;
+
     useFrame((state) => {
         if (meshRef.current) {
-            // Move backwards (towards -Z)
-            meshRef.current.position.z -= speed;
-            // Fade out as it goes back
-            meshRef.current.material.opacity = Math.max(0, 0.8 + (meshRef.current.position.z / 30));
-            // Reset position when too far
-            if (meshRef.current.position.z < -25) {
+            // Move backward relative to ship
+            meshRef.current.position.z -= baseSpeed * speedMultiplier;
+
+            // Reset position when too far back
+            if (meshRef.current.position.z < -40) {
                 meshRef.current.position.z = position[2];
             }
+
+            // Fade out
+            meshRef.current.material.opacity = Math.max(0, 0.6 + (meshRef.current.position.z / 30));
         }
     });
 
@@ -26,45 +30,45 @@ const FoamParticle = ({ position, scale, speed }) => {
 };
 
 const WakeTrail = () => {
-    const meshRef = useRef();
-    useFrame((state) => {
-        if (meshRef.current) {
-            // Animate texture offset if we had one, but here we'll just jitter scale
-            meshRef.current.scale.x = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.05;
-        }
-    });
-
     return (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, -10]}>
-            <planeGeometry args={[12, 30]} />
-            <meshStandardMaterial color="#fff" transparent opacity={0.2} depthWrite={false} />
-        </mesh>
+        <group rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, -30]}>
+            {/* Main Center Trail */}
+            <mesh position={[0, 0, 0]}>
+                <planeGeometry args={[15, 120]} />
+                <meshStandardMaterial color="#ffffff" transparent opacity={0.15} depthWrite={false} />
+            </mesh>
+        </group>
     );
 };
 
-const Wake = () => {
-    const particles = Array.from({ length: 15 }).map((_, i) => ({
-        position: [(Math.random() - 0.5) * 6, Math.random() * 0.2, Math.random() * 5],
-        scale: Math.random() * 0.4 + 0.2,
-        speed: Math.random() * 0.1 + 0.1,
-    }));
+const Wake = ({ scrollSpeed = 0.15 }) => {
+    // Sync foam physics with the visual speed of the environment
+    const speedFactor = scrollSpeed * 3.0; // Scale it to feel "right"
+
+    const sternParticles = useMemo(() =>
+        Array.from({ length: 30 }).map((_, i) => ({
+            position: [(Math.random() - 0.5) * 10, Math.random() * 0.5, Math.random() * 20],
+            scale: Math.random() * 1.2 + 0.3,
+            speedMultiplier: (Math.random() * 0.5 + 0.5) * speedFactor,
+        })), [speedFactor]);
 
     return (
-        <group position={[0, 0.02, 0]}>
-            {/* Bow wave */}
-            <FoamParticle position={[0, 0.5, 12]} scale={0.8} speed={0.2} />
-            <FoamParticle position={[1.5, 0.5, 11]} scale={0.6} speed={0.15} />
-            <FoamParticle position={[-1.5, 0.5, 11]} scale={0.6} speed={0.15} />
+        <group position={[0, -0.9, 0]}>
+            {/* Bow Spray - Left */}
+            <FoamParticle position={[-4, 1, 38]} scale={1.5} speedMultiplier={speedFactor} />
+            {/* Bow Spray - Right */}
+            <FoamParticle position={[4, 1, 38]} scale={1.5} speedMultiplier={speedFactor} />
 
-            {/* Trailing foam */}
-            {particles.map((p, i) => (
-                <FoamParticle key={i} position={p.position} scale={p.scale} speed={p.speed} />
+            {/* Stern Churn */}
+            {sternParticles.map((p, i) => (
+                <FoamParticle key={i} position={p.position} scale={p.scale} speedMultiplier={p.speedMultiplier} />
             ))}
 
-            {/* V-shaped wake trail */}
             <WakeTrail />
         </group>
     );
 };
 
+// Add useMemo to imports if not there
+import { useMemo } from 'react';
 export default Wake;

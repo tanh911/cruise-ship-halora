@@ -1,3 +1,4 @@
+// Refreshing cache to resolve ERR_CACHE_READ_FAILURE
 import React, { useState } from 'react';
 
 const exploreBtnStyle = {
@@ -66,14 +67,14 @@ const AdOverlay = ({ onExplore, visible = true }) => {
                     <button onClick={() => onExplore('sundeck')} style={{ ...exploreBtnStyle, opacity: 0.4, cursor: 'not-allowed' }} disabled>
                         SUN DECK <span style={{ fontSize: '8px', display: 'block', color: '#999' }}>Đang triển khai</span>
                     </button>
-                    <button onClick={() => onExplore('premiumtripleroom')} style={exploreBtnStyle}>
+                    <button onClick={() => onExplore('premium')} style={exploreBtnStyle}>
                         PREMIUM TRIPLE
                     </button>
                     <button onClick={() => onExplore('default')} style={exploreBtnStyle}>
                         TOÀN CẢNH
                     </button>
-                    <button style={{ ...exploreBtnStyle, opacity: 0.4, cursor: 'not-allowed' }} disabled>
-                        TEST ROOM <span style={{ fontSize: '8px', display: 'block', color: '#999' }}>Đang triển khai</span>
+                    <button onClick={() => onExplore('test')} style={{ ...exploreBtnStyle, opacity: 0.6 }}>
+                        CABIN TEST
                     </button>
                 </div>
 

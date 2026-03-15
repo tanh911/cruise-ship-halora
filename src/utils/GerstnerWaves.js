@@ -2,12 +2,12 @@ import * as THREE from 'three';
 
 // Realistic parameters for multiple waves - Expanded for more detail
 export const WAVES = [
-    { direction: 0.0, amplitude: 0.6, wavelength: 60, speed: 0.4, steepness: 0.35 },
-    { direction: 35.0, amplitude: 0.4, wavelength: 35, speed: 0.3, steepness: 0.25 },
-    { direction: -20.0, amplitude: 0.25, wavelength: 20, speed: 0.45, steepness: 0.15 },
-    { direction: 110.0, amplitude: 0.15, wavelength: 12, speed: 0.55, steepness: 0.1 },
-    { direction: 200.0, amplitude: 0.1, wavelength: 8, speed: 0.65, steepness: 0.1 },
-    { direction: -150.0, amplitude: 0.05, wavelength: 5, speed: 0.75, steepness: 0.1 },
+    { direction: 0.0, amplitude: 0.5, wavelength: 120, speed: 0.3, steepness: 0.2 },
+    { direction: 45.0, amplitude: 0.35, wavelength: 55, speed: 0.35, steepness: 0.18 },
+    { direction: -30.0, amplitude: 0.2, wavelength: 30, speed: 0.4, steepness: 0.12 },
+    { direction: 130.0, amplitude: 0.12, wavelength: 18, speed: 0.5, steepness: 0.08 },
+    { direction: 210.0, amplitude: 0.08, wavelength: 10, speed: 0.6, steepness: 0.06 },
+    { direction: -110.0, amplitude: 0.04, wavelength: 7, speed: 0.7, steepness: 0.04 },
 ];
 
 /**

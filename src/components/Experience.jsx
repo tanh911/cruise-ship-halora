@@ -1,152 +1,114 @@
-import React, { useEffect, useRef, useState, Suspense, useCallback } from 'react';
-import { OrbitControls, Environment, Sky, useGLTF } from '@react-three/drei';
-import SkyBox from './Environment/SkyBox';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useGLTF, OrbitControls } from '@react-three/drei';
+import SkyBox from './Environment/SkyBox';
 import Ship from './Ship/Ship';
 import Water from './Environment/Water';
-import Wake from './Environment/Wake';
-import ZoomControls from './UI/ZoomControls';
+import Mountains from './Environment/Mountains';
+import Birds from './Environment/Birds';
+import WaterStreaks from './Environment/WaterStreaks';
 
-const TestRoom = React.lazy(() => import('./Scenes/TestRoom'));
-import PremiumTripleRoom from './Scenes/PremiumTripleRoom';
+// Preload essential assets for instant switching
+useGLTF.preload('/models/base.glb');
+useGLTF.preload('/models/premiumTripleRoom-raw-processed.glb');
+useGLTF.preload('/models/test-room.glb');
 
-// Room model is loaded lazily when user enters the room
+const PremiumTripleRoom = lazy(() => import('./Scenes/PremiumTripleRoom'));
+const TestRoom = lazy(() => import('./Scenes/TestRoom'));
 
-// Separate component for the ocean scene to isolate hooks
-const DEFAULT_CAM_POS = new THREE.Vector3(67.5, 30, 25.5);
+const DEFAULT_CAM_POS = new THREE.Vector3(-246.8, 10.4, -90.1);
 const DEFAULT_LOOK_AT = new THREE.Vector3(0, 0, 0);
 
-const BaseScene = ({ targetView, hideShip }) => {
-    const controlsRef = useRef();
-    const [targetPos, setTargetPos] = useState(new THREE.Vector3(67.5, 30, 25.5));
-    const [targetLookAt, setTargetLookAt] = useState(new THREE.Vector3(0, 0, 0));
-    const wasInsideRoom = useRef(false);
-
-    const { camera } = useThree();
+const BaseScene = ({ onReady }) => {
+    const waveAngleRef = useRef(180);
+    const mountainAngleRef = useRef(180);
 
     useEffect(() => {
-        // Detect khi vừa rời phòng → snap camera ngay lập tức
-        if (wasInsideRoom.current && !hideShip) {
-            camera.position.copy(DEFAULT_CAM_POS);
-            camera.fov = 70;
-            camera.updateProjectionMatrix();
-            if (controlsRef.current) {
-                controlsRef.current.target.copy(DEFAULT_LOOK_AT);
-                controlsRef.current.update();
-            }
-        }
-        wasInsideRoom.current = hideShip;
-    }, [hideShip, camera]);
-
-    useEffect(() => {
-        // Chỉ chạy logic camera nếu KHÔNG ở trong phòng
-        if (hideShip) return;
-
-        if (targetView === 'suite') {
-            setTargetPos(new THREE.Vector3(15, 2, 5));
-            setTargetLookAt(new THREE.Vector3(0, 0, 5));
-        } else if (targetView === 'sundeck') {
-            setTargetPos(new THREE.Vector3(-10, 10, -5));
-            setTargetLookAt(new THREE.Vector3(0, 0, 0));
-        } else {
-            setTargetPos(new THREE.Vector3(67.5, 30, 25.5));
-            setTargetLookAt(new THREE.Vector3(0, 0, 0));
-        }
-    }, [targetView, hideShip]);
-
-    // Reset FOV khi quay về toàn cảnh thuyền
-    useEffect(() => {
-        if (!hideShip && (targetView === 'default' || targetView === 'suite' || targetView === 'sundeck')) {
-            camera.fov = 70;
-            camera.updateProjectionMatrix();
-        }
-    }, [targetView, camera, hideShip]);
-
-    useFrame((state, delta) => {
-        // Chỉ lerp camera nếu không ở trong phòng
-        if (hideShip) return;
-
-        state.camera.position.lerp(targetPos, delta * 2);
-        if (controlsRef.current) {
-            controlsRef.current.target.lerp(targetLookAt, delta * 2);
-            controlsRef.current.update();
-        }
-    });
+        // Signal ready immediately on mount to avoid artificial delays
+        if (onReady) onReady();
+    }, [onReady]);
 
     return (
         <>
-            {/* Chỉ bật OrbitControls của BaseScene khi không ở trong phòng */}
-            {!hideShip && (
-                <OrbitControls
-                    ref={controlsRef}
-                    makeDefault
-                    minPolarAngle={0}
-                    maxPolarAngle={Math.PI / 2.1}
-                    enableZoom={false}
-                    enablePan={false}
-                />
-            )}
-
-            {/* Ship Model - Hidden when inside room to save resources */}
-            <group position={[0, 1, 5]} visible={!hideShip}>
+            <SkyBox />
+            <Water waveAngleRef={waveAngleRef} scrollSpeed={0.15} />
+            <Mountains scrollSpeed={0.15} mountainAngleRef={mountainAngleRef} />
+            <WaterStreaks />
+            <Birds count={50} />
+            <group position={[17.5, -2.0, 0.0]} rotation={[0, Math.PI, 0]}>
                 <Ship />
             </group>
         </>
     );
 };
 
-const Experience = ({ targetView, setTargetView, onReady }) => {
-    const isInsideRoom = targetView === 'testroom' || targetView === 'premiumtripleroom';
+const Experience = ({ targetView, setTargetView, isZooming, onZoomComplete, setFadeOpacity, onReady }) => {
+    const zoomProgress = useRef(0);
+    const initialCamPos = useRef(new THREE.Vector3(-246.8, 10.4, -90.1));
+    const targetCamPos = useRef(new THREE.Vector3(5, 10, -30)); // Snappier target
 
-    useEffect(() => {
-        if (onReady) onReady();
-    }, [onReady]);
+    useFrame((state, delta) => {
+        if (isZooming) {
+            zoomProgress.current += delta * 1.2; // Faster speed
+
+            // Calculate fade: start at 0.7 progress, reach 1.0 at 0.95 progress
+            const fadeStart = 0.7;
+            const fadeEnd = 0.95;
+            if (zoomProgress.current > fadeStart) {
+                const alpha = Math.min(1, (zoomProgress.current - fadeStart) / (fadeEnd - fadeStart));
+                if (setFadeOpacity) setFadeOpacity(alpha);
+            }
+
+            if (zoomProgress.current >= 0.95) {
+                zoomProgress.current = 1;
+                onZoomComplete();
+            }
+
+            // Smooth cubic easing
+            const t = zoomProgress.current;
+            const easeT = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+            state.camera.position.lerpVectors(initialCamPos.current, targetCamPos.current, easeT);
+            state.camera.lookAt(17.5, 5, 0); // Focus on ship center
+        } else if (targetView === 'default') {
+            zoomProgress.current = 0;
+            state.camera.position.copy(initialCamPos.current);
+            state.camera.lookAt(0, 5, 0);
+            if (setFadeOpacity) setFadeOpacity(0);
+        }
+    });
 
     return (
         <>
-            {/* STABLE GLOBAL ENVIRONMENT - Hidden when inside room */}
-            {!isInsideRoom && <SkyBox />}
-            {!isInsideRoom && <Water />}
+            <color attach="background" args={['#050812']} />
+            <fog attach="fog" args={['#050812', 100, 1200]} />
 
-            {/* Tắt fog khi ở trong phòng để tránh che phủ cảnh phòng */}
-            {!isInsideRoom && <fog attach="fog" args={['#1a0a2e', 80, 600]} />}
-
-            <ambientLight intensity={isInsideRoom ? 0.8 : 0.4} color="#ff9966" />
+            <ambientLight intensity={0.3} color="#ccddff" />
             <directionalLight
-                position={[150, 20, 150]}
-                intensity={2.5}
-                color="#ffccaa"
-                castShadow={true}
-                shadow-mapSize={[2048, 2048]}
-                shadow-bias={-0.0003}
-                shadow-normalBias={0.02}
+                position={[0, 20, -150]}
+                intensity={9}
+                color="#ffaa66"
             />
-            <directionalLight position={[-50, 10, -50]} intensity={0.5} color="#8899bb" />
-            <directionalLight position={[-80, 30, 100]} intensity={1.2} color="#ffddaa" />
-            <hemisphereLight skyColor="#ffccaa" groundColor="#003366" intensity={0.3} />
-
-            {/* BASE SCENE / CAMERA - Must stay mounted to provide stability */}
-            <BaseScene targetView={isInsideRoom ? 'default' : targetView} hideShip={isInsideRoom} />
-
-            {/* ROOMS - PremiumTripleRoom mounted directly (not lazy) for reliable rendering */}
-            {targetView === 'premiumtripleroom' && (
-                <PremiumTripleRoom onExit={() => setTargetView('default')} />
-            )}
 
             <Suspense fallback={null}>
-                {/* Environment and Models can suspend - Background stays stable */}
-                <Environment preset="sunset" />
-
-                {/* ROOMS */}
-                {targetView === 'testroom' && <TestRoom />}
+                {targetView === 'default' ? (
+                    <BaseScene onReady={onReady} />
+                ) : targetView === 'premium' ? (
+                    <PremiumTripleRoom onExit={() => setTargetView('default')} onReady={onReady} />
+                ) : targetView === 'test' ? (
+                    <TestRoom onExit={() => setTargetView('default')} onReady={onReady} />
+                ) : null}
             </Suspense>
 
-            {!isInsideRoom && (
-                <EffectComposer disableNormalPass multisampling={0}>
-                    <Bloom luminanceThreshold={0.8} intensity={0.5} radius={0.6} mipmapBlur />
-                </EffectComposer>
+            {targetView === 'default' && !isZooming && (
+                <OrbitControls
+                    enableZoom={false}
+                    enablePan={false}
+                    enableRotate={false}
+                    dampingFactor={0.05}
+                    enableDamping={true}
+                />
             )}
         </>
     );

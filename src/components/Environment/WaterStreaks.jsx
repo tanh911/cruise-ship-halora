@@ -14,8 +14,8 @@ const WaterStreaks = () => {
             0,
             (Math.random() - 0.5) * 500  // Wide spread Z
         ],
-        speed: 5 + Math.random() * 10, // FAST speed
-        scale: 20 + Math.random() * 30, // Long streaks
+        speed: 12 + Math.random() * 20, // INCREASED speed (was 5-15)
+        scale: 25 + Math.random() * 40, // Slightly longer streaks
     })));
 
     useFrame(() => {

@@ -1,95 +1,140 @@
-import React, { Suspense, useState, useTransition, useEffect, useCallback, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Html, useGLTF } from '@react-three/drei';
-import * as THREE from 'three';
-import Experience from './components/Experience';
-import Overlay from './components/UI/Overlay';
-import OceanScene from './components/Environment/OceanScene';
-import AdOverlay from './components/UI/AdOverlay';
-import RoomUI from './components/UI/RoomUI';
-import LoadingScreen from './components/UI/LoadingScreen';
-import SceneErrorBoundary from './components/UI/SceneErrorBoundary';
-import SceneTransition from './components/UI/SceneTransition';
-import './index.css';
+import React, { useState, useTransition, Suspense, useCallback, useRef } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { useGLTF } from '@react-three/drei'
+import Experience from './components/Experience'
+import AdOverlay from './components/UI/AdOverlay'
+import RoomUI from './components/UI/RoomUI'
+import LoadingScreen from './components/UI/LoadingScreen'
+import SceneErrorBoundary from './components/UI/SceneErrorBoundary'
 
-// Preload models globally to avoid delay when switching views
-useGLTF.preload('./models/cruise-ship-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-useGLTF.preload('./models/premiumTripleRoom-optimized.glb', 'https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-useGLTF.preload('./models/test_room.glb');
+// preload đã bị xóa để tránh treo Chrome khi reload
+// useGLTF.preload('/models/base.glb')
 
 function App() {
-  const [targetView, setTargetView] = useState('default');
-  const [isPending, startTransition] = useTransition();
-  const [isSceneReady, setIsSceneReady] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const pendingView = useRef(null);
+  const [targetView, setTargetView] = useState('default')
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isZooming, setIsZooming] = useState(false)
+  const [fadeOpacity, setFadeOpacity] = useState(0)
+  const [contextLost, setContextLost] = useState(false);
+  const [, startTransition] = useTransition();
 
-  const handleViewChange = useCallback((newView) => {
-    if (newView === targetView) return;
+  const canvasRef = useRef();
 
-    // Trigger transition animation
-    pendingView.current = newView;
-    setIsTransitioning(true);
-  }, [targetView]);
-
-  // Called at the midpoint of the transition (screen is fully dark)
-  const handleTransitionMidpoint = useCallback(() => {
-    if (pendingView.current) {
-      setTargetView(pendingView.current);
-      pendingView.current = null;
+  const handleViewChange = (view) => {
+    setFadeOpacity(0);
+    if (targetView === 'default' && view === 'premium') {
+      setIsZooming(true);
+      setIsTransitioning(true);
+      // We don't setTargetView yet, Experience will handle it after zoom
+      return;
     }
-  }, []);
 
-  // Called when transition completely finishes fading out
-  const handleTransitionComplete = useCallback(() => {
-    setIsTransitioning(false);
-  }, []);
+    setIsTransitioning(true);
+    startTransition(() => {
+      setTargetView(view);
+    });
+  };
 
-  const handleReady = useCallback(() => {
-    setIsSceneReady(true);
+  const handleZoomComplete = () => {
+    setIsZooming(false);
+    startTransition(() => {
+      setTargetView('premium');
+      setFadeOpacity(0);
+    });
+  };
+
+  const onCreated = useCallback((state) => {
+    const canvas = state.gl.domElement;
+    canvasRef.current = canvas;
+
+    // 🔥 User suggested listeners
+    canvas.addEventListener('webglcontextlost', (event) => {
+      event.preventDefault();
+      console.warn('WebGL Context Lost, trying to restore...');
+      setContextLost(true);
+    });
+
+    canvas.addEventListener('webglcontextrestored', () => {
+      console.log('WebGL Context Restored');
+      setContextLost(false);
+      // Logic phục hồi scene nếu cần
+    });
   }, []);
 
   return (
-    <div className="app-container">
-      <LoadingScreen isSceneReady={isSceneReady} />
-      <SceneTransition
-        isTransitioning={isTransitioning}
-        onMidpoint={handleTransitionMidpoint}
-        onComplete={handleTransitionComplete}
-      />
+    <div className="app-container" style={{ width: '100vw', height: '100vh', background: '#000', position: 'relative' }}>
+      <LoadingScreen />
 
-      <Canvas
-        camera={{ position: [67.5, 30, 25.5], fov: 70, near: 0.1, far: 5000 }}
-        gl={{
-          antialias: true,
-          stencil: false,
-          depth: true,
-          powerPreference: "high-performance",
-          toneMapping: THREE.ACESFilmicToneMapping
-        }}
-      >
-        <SceneErrorBoundary>
-          <Experience
-            targetView={targetView}
-            setTargetView={handleViewChange}
-            onReady={handleReady}
-          />
-        </SceneErrorBoundary>
-      </Canvas>
+      {/* Cinematic Fade Overlay */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background: '#000',
+        opacity: fadeOpacity,
+        pointerEvents: 'none',
+        zIndex: 100,
+        transition: 'opacity 0.2s ease-out'
+      }} />
+
+      {contextLost && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: '#050812', display: 'flex', flexDirection: 'column',
+          justifyContent: 'center', alignItems: 'center', zIndex: 99999, color: '#d4af37'
+        }}>
+          <div style={{ fontSize: '18px', marginBottom: '15px' }}>RECOVERING...</div>
+          <div style={{ fontSize: '12px', color: '#888' }}>WebGL context lost. Please wait or refresh.</div>
+          <button onClick={() => window.location.reload()} style={{
+            marginTop: '20px', padding: '10px 25px', background: 'transparent',
+            border: '1px solid #d4af37', color: '#d4af37', cursor: 'pointer'
+          }}>REFRESH</button>
+        </div>
+      )}
+
+      <Suspense fallback={null}>
+        <Canvas
+          camera={{ position: [-246.8, 10.4, -90.1], fov: 45, near: 1.0, far: 10000 }}
+          dpr={[1, 1.5]}
+          gl={{
+            preserveDrawingBuffer: false,
+            antialias: true,
+            powerPreference: "high-performance",
+            failIfMajorPerformanceCaveat: false,
+            alpha: false,
+            stencil: false,
+            depth: true,
+            precision: "highp"
+          }}
+          onCreated={onCreated}
+        >
+          <SceneErrorBoundary>
+            <Experience
+              targetView={targetView}
+              setTargetView={setTargetView}
+              isZooming={isZooming}
+              onZoomComplete={handleZoomComplete}
+              setFadeOpacity={setFadeOpacity}
+              onReady={() => setIsTransitioning(false)}
+            />
+          </SceneErrorBoundary>
+        </Canvas>
+      </Suspense>
 
       <AdOverlay
         onExplore={handleViewChange}
-        visible={targetView === 'default' || targetView === 'sundeck' || targetView === 'suite'}
+        visible={targetView === 'default' && !isZooming}
       />
 
       <RoomUI
         onBack={() => handleViewChange('default')}
         visible={targetView !== 'default'}
+        targetView={targetView}
       />
-
-      <div style={{ height: '200vh', pointerEvents: 'none' }}></div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

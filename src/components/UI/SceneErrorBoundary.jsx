@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { Text } from '@react-three/drei';
 
 class SceneErrorBoundary extends Component {
     constructor(props) {
@@ -23,9 +22,6 @@ class SceneErrorBoundary extends Component {
                         <boxGeometry args={[10, 10, 10]} />
                         <meshBasicMaterial color="red" wireframe />
                     </mesh>
-                    <Text position={[0, 0, 0]} fontSize={2} color="white">
-                        {'Lỗi tải mô hình 3D.\nVui lòng kiểm tra Git LFS trên Netlify.'}
-                    </Text>
                 </group>
             );
         }
