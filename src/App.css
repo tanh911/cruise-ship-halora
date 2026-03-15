@@ -1,0 +1,7 @@
+/* Cleared default styles to prevent layout issues */
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
